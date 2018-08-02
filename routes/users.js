@@ -4,8 +4,8 @@ var router = express.Router()
 const request = require('superagent')
 require('superagent-proxy')(request)
 var fetch = require('node-fetch')
-const clientId = 'f21ee8a6c540fb41ea46'
-const clientSecret = '3e32822cdc778f98ba0b9c21e016cac4941fcd2f'
+var clientId = ''
+var clientSecret = ''
 var accessToken = ''
 var orgNames = []
 var orgs = {}
@@ -87,6 +87,11 @@ router.get('/orgDetails/:id', function (req, res, next) {
       })
     await res.render('index', {repoNames: repoNames})
   })()
+})
+router.post('/authorise', function (req, res, next) {
+  clientId = req.body.clientId
+  clientSecret = req.body.clientSecret
+  res.redirect(`https://github.com/login/oauth/authorize?client_id=${clientId}`)
 })
 
 module.exports = router
