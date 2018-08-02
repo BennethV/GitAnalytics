@@ -275,6 +275,41 @@ hr {
   
   {{/if}}
 
+
+
+{{#if orgNames}}
+     
+        <div class="dropdown">
+          <button onclick="myFunction()" class="dropbtn">Organisation List</button>
+          <div id="myDropdown" class="dropdown-content">
+            <input type="text" placeholder="Search.." id="myInput" onkeyup="filterFunction()">
+            {{#each orgNames}}
+            <a href="../users/orgDetails/{{@index}}" >{{this}}</a>
+            {{/each}}
+          </div>
+        </div>
+  
+  {{/if}}
+  </div>
+
+  <div>
+  {{#if repoNames}}
+     
+        <div class="dropdown">
+          <button onclick="myFunction()" class="dropbtn">Available Repos</button>
+          <div id="myDropdown" class="dropdown-content">
+            <input type="text" placeholder="Search.." id="myInput" onkeyup="filterFunction()">
+            {{#each repoNames}}
+            <a href="/charts" >{{this}}</a>
+            {{/each}}
+          </div>
+        </div>
+  
+  {{/if}}
+
+</div>
+  
+
 <button onclick="document.getElementById('id01').style.display='block'" style="width:auto;">Organisation Statistics</button>
 
 <div id="id01" class="modal">
