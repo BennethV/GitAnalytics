@@ -45,9 +45,7 @@ router.get('/', function (req, res, next) {
             .set('Authorization', 'token ' + accessToken)
             .set('accept', 'application/json')
             .then(async function (results) {
-              console.log('got user information, organization url is: ' + results.body.organizations_url)
               // Gets list of organizations that the user has
-
               await request
                 .get(results.body.organizations_url)
                 .proxy(proxy)
@@ -55,13 +53,11 @@ router.get('/', function (req, res, next) {
                 .set('accept', 'application/json')
                 .then(function (organizations) {
                   orgs = organizations.body // a for lop for putiting the organizaions into an array
-                  console.log('list of organizations is ' + orgs)
                   for (var i = 0; i < orgs.length; i++) {
                     orgNames[i] = orgs[i].login
                   }
                 })
             })
-          console.log('this is the saved list of repos ' + orgNames)
           res.render('index', {orgNames: orgNames})
         })
     } catch (err) { console.log(err) }
@@ -80,7 +76,6 @@ router.get('/orgDetails/:id', function (req, res, next) {
       .set('accept', 'application/json')
       .then(function (repos) {
         repoList = repos.body
-        console.log(repoList)
         for (var i = 0; i < repoList.length; i++) {
           repoNames[i] = repoList[i].name
         }
@@ -92,6 +87,13 @@ router.post('/authorise', function (req, res, next) {
   clientId = req.body.clientId
   clientSecret = req.body.clientSecret
   res.redirect(`https://github.com/login/oauth/authorize?client_id=${clientId}`)
+})
+
+// getting details of the selected repo. These will be passed so
+// that they will be rendered on the client side.
+router.get('/repoDetails/:id', function (req, res, next) {
+  const currentRepo = repoList[req.params.id]
+  res.render('index', {currentRepo: currentRepo})
 })
 
 module.exports = router
