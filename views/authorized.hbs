@@ -114,5 +114,10 @@ form.example::after {
 </style>
 
 <head>
-<script src= "/cdn/javascripts/orgRepos.js"></script>
+        {{#each currentRepo}}
+        <li>{{this}}</li>
+        {{/each}}
+        <script src="/cdn/javascripts/stats.js" type="text/javascript">
+        statistics()
+        </script>         
 </head>
