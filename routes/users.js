@@ -11,6 +11,7 @@ var orgNames = []
 var orgs = {}
 var repoList = []
 var daysElapsed = []
+var createDate = ''
 var fs = require('fs')
 var proxy = process.env.http_proxy || 'http://students%5C1077310:18Barnato@1051@proxyss.wits.ac.za:80'
 
@@ -96,9 +97,7 @@ router.post('/authorise', function (req, res, next) {
 // this code will need to be cleaned. This function should render on the client side
 router.get('/repoDetails/:id', function (req, res, next) {
   const currentRepo = repoList[req.params.id]
-  console.log(currentRepo.releases_url)
-  var releaseDates = []
-  var releaseTags = [];
+  console.log(currentRepo.releases_url);
   (async function () {
     await request
       .get(`https://api.github.com/repos/GitAnalytics2018/Group-9-Lab/releases`)
@@ -106,28 +105,52 @@ router.get('/repoDetails/:id', function (req, res, next) {
       .set('Authorization', 'token ' + accessToken)
       .set('accept', 'application/json')
       .then(async function (results) {
-        var releases = ['2018-08-03T07:30:01.000Z', '2018-08-07T07:30:01.000Z', '2018-08-14T07:30:01.000Z']
-        for (var i = 0; i < releases.length; i++) {
-          releaseDates[i] = new Date(releases[i])
-          // releaseTags[i] = releases[i].tag_name
-          if (i !== 0) {
-            daysElapsed[i - 1] = noOfDays(releaseDates[i - 1], releaseDates[i])
-          }
-        }
+        console.log(results.body)
+        var releases = ['2018-08-03', '2018-08-07', '2018-08-11', '2018-08-15', '2018-08-19', '2018-08-23']
+        getReleaseDates(releases)
+        dateCreated(releases)
       })
     console.log(daysElapsed)
-    console.log(releaseTags)
-    res.render('authorized', {currentRepo: currentRepo})
+    // console.log(releaseTags)
+    res.render('timeline', {currentRepo: currentRepo})
   })()
 })
 // gets the number of days between the release dates
 function noOfDays (date1, date2) {
-  var firstDate = date1.getTime()
-  var secDate = date2.getTime()
+  var firstDate = Math.ceil(date1.getTime())
+  var secDate = Math.ceil(date2.getTime())
+  console.log('first date is: ' + firstDate)
+  console.log('second date is: ' + secDate)
   var diff = secDate - firstDate
   var days = 1000 * 60 * 60 * 24 // this gives a day in milliseconds
   var noDays = diff / days
   return noDays
+}
+
+// gets the release dates and stores them
+function getReleaseDates (releases) {
+  var releaseDates = []
+  var releaseTags = []
+  for (var i = 0; i < releases.length; i++) {
+    releaseDates[i] = new Date(releases[i].substring(0, 10))
+    // releaseTags[i] = releases[i].tag_name
+    if (i !== 0) {
+      daysElapsed[i - 1] = noOfDays(releaseDates[i - 1], releaseDates[i])
+      checkDays(daysElapsed[i], daysElapsed[0])
+    }
+  }
+  console.log(releaseTags)
+}
+
+function dateCreated (releases) {
+  if (releases.length !== 0) {
+    createDate = releases[0].created_at
+  }
+  console.log(createDate)
+}
+
+function checkDays (currentDiff, firstDiff) {
+  return currentDiff === firstDiff
 }
 
 module.exports = router
