@@ -97,8 +97,8 @@ router.post('/authorise', function (req, res, next) {
 // this code will need to be cleaned. This function should render on the client side
 router.get('/repoDetails/:id', function (req, res, next) {
   const currentRepo = repoList[req.params.id]
-  console.log(currentRepo.releases_url);
-  (async function () {
+
+  /* (async function () {
     await request
       .get(`https://api.github.com/repos/GitAnalytics2018/Group-9-Lab/releases`)
       .proxy(proxy)
@@ -108,13 +108,15 @@ router.get('/repoDetails/:id', function (req, res, next) {
         console.log(results.body)
         var releases = ['2018-08-03', '2018-08-07', '2018-08-11', '2018-08-15', '2018-08-19', '2018-08-23']
         getReleaseDates(releases)
-        dateCreated(releases)
       })
     console.log(daysElapsed)
     // console.log(releaseTags)
     res.render('timeline', {currentRepo: currentRepo})
-  })()
+  })() */
+
+  res.render('timeline', {currentRepo: currentRepo})
 })
+/*
 // gets the number of days between the release dates
 function noOfDays (date1, date2) {
   var firstDate = Math.ceil(date1.getTime())
@@ -152,5 +154,5 @@ function dateCreated (releases) {
 function checkDays (currentDiff, firstDiff) {
   return currentDiff === firstDiff
 }
-
+*/
 module.exports = router

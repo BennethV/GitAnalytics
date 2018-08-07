@@ -18,7 +18,7 @@
       backgroundColor = null,
       tickFormat = { format: d3.time.format('%Y-%m-%d'),
         tickTime: d3.time.day,
-        tickInterval: 6,
+        tickInterval: 9,
         tickSize: 6,
         tickValues: null
       },

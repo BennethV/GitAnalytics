@@ -43,7 +43,6 @@ router.post('/', function (req, res, next) {
       }
 
       res.render('index', { userDetails: searchResults.userDetails() })
-
       // return {data}
     } catch (err) { console.log(err) }
   })()
