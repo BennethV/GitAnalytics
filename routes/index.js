@@ -1,4 +1,5 @@
 var express = require('express')
+var path = require('path')
 var router = express.Router()
 var searchResults = require('../public/javascripts/index.js')
 var fetch = require('node-fetch')
@@ -11,7 +12,7 @@ router.get('/', function (req, res, next) {
 })
 
 router.get('/charts', function (req, res, next) {
-  res.render('charts')
+  res.sendFile(path.join(__dirname,'../views','charts.html'))
 })
 
 router.get('/repolists/:id', function (req, res, next) {
