@@ -1,5 +1,6 @@
 // required headers for access token
 var express = require('express')
+var path = require('path')
 var router = express.Router()
 const request = require('superagent')
 require('superagent-proxy')(request)
@@ -9,30 +10,20 @@ var clientSecret = ''
 var accessToken = ''
 var orgNames = []
 var orgs = {}
+var selectedOrg = ''
 var repoList = []
 var fs = require('fs')
 var proxy = process.env.http_proxy || 'http://students%5C1077310:18Barnato@1051@proxyss.wits.ac.za:80'
 
 /* GET users listing. */
 
-router.get('/', function (req, res, next) {
-  const {query} = req
-  const {code} = query;
-  // we need this because we are making an outgoing reques to another server
+router.post('/', function (req, res, next) {
 
+  // we need this because we are making an outgoing reques to another server
+  accessToken = req.body.accessToken;
   (async function () {
     try {
-      await request
-        .post('https://github.com/login/oauth/access_token')
-        .send({ client_id: clientId,
-          client_secret: clientSecret,
-          code: code }) // sends a JSON post body
-        .proxy(proxy)
-        .set('accept', 'application/json')
-        .then(async function (result) {
-          const data = result.body
-          accessToken = data.access_token
-          fs.writeFile(__dirname + '\\..\\public\\javascripts\\code.txt', accessToken, function (err) {
+         fs.writeFile(__dirname + '\\..\\public\\javascripts\\code.txt', accessToken, function (err) {
             if (err) throw err
             console.log(err)
           })
@@ -45,9 +36,7 @@ router.get('/', function (req, res, next) {
             .set('Authorization', 'token ' + accessToken)
             .set('accept', 'application/json')
             .then(async function (results) {
-              console.log('got user information, organization url is: ' + results.body.organizations_url)
               // Gets list of organizations that the user has
-
               await request
                 .get(results.body.organizations_url)
                 .proxy(proxy)
@@ -55,21 +44,20 @@ router.get('/', function (req, res, next) {
                 .set('accept', 'application/json')
                 .then(function (organizations) {
                   orgs = organizations.body // a for lop for putiting the organizaions into an array
-                  console.log('list of organizations is ' + orgs)
                   for (var i = 0; i < orgs.length; i++) {
                     orgNames[i] = orgs[i].login
                   }
                 })
             })
-          console.log('this is the saved list of repos ' + orgNames)
           res.render('index', {orgNames: orgNames})
-        })
+
     } catch (err) { console.log(err) }
   })()
 })
 
 router.get('/orgDetails/:id', function (req, res, next) {
   const currentOrg = orgs[req.params.id]
+  selectedOrg = currentOrg.login
   const repoUrl = currentOrg.repos_url
   var repoNames = [];
   (async function () {
@@ -80,7 +68,6 @@ router.get('/orgDetails/:id', function (req, res, next) {
       .set('accept', 'application/json')
       .then(function (repos) {
         repoList = repos.body
-        console.log(repoList)
         for (var i = 0; i < repoList.length; i++) {
           repoNames[i] = repoList[i].name
         }
@@ -88,10 +75,9 @@ router.get('/orgDetails/:id', function (req, res, next) {
     await res.render('index', {repoNames: repoNames})
   })()
 })
-router.post('/authorise', function (req, res, next) {
-  clientId = req.body.clientId
-  clientSecret = req.body.clientSecret
-  res.redirect(`https://github.com/login/oauth/authorize?client_id=${clientId}`)
+
+router.get('/charts', function (req, res, next) {
+  res.sendFile(path.join(__dirname,'../views','charts.html'))
 })
 
 module.exports = router
