@@ -29,6 +29,7 @@ router.get('/', function (req, res, next) {
         .send({ client_id: clientId,
           client_secret: clientSecret,
           code: code }) // sends a JSON post body
+
         .proxy(proxy)
         .set('accept', 'application/json')
         .then(async function (result) {
