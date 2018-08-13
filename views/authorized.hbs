@@ -113,35 +113,11 @@ form.example::after {
 
 </style>
 
-{{#if orgNames}}
-     
-        <div class="dropdown">
-          <button onclick="myFunction()" class="dropbtn">Organisation List</button>
-          <div id="myDropdown" class="dropdown-content">
-            <input type="text" placeholder="Search.." id="myInput" onkeyup="filterFunction()">
-            {{#each orgNames}}
-            <a href="../users/orgDetails/{{@index}}" >{{this}}</a>
-            {{/each}}
-          </div>
-        </div>
-  
-  {{/if}}
-
-  {{#if repoNames}}
-     
-        <div class="dropdown">
-          <button onclick="myFunction()" class="dropbtn">Available Repos</button>
-          <div id="myDropdown" class="dropdown-content">
-            <input type="text" placeholder="Search.." id="myInput" onkeyup="filterFunction()">
-            {{#each repoNames}}
-            <a href="/charts" >{{this}}</a>
-            {{/each}}
-          </div>
-        </div>
-  
-  {{/if}}
-
-
 <head>
-<script src= "/cdn/javascripts/orgRepos.js"></script>
+        {{#each currentRepo}}
+        <li>{{this}}</li>
+        {{/each}}
+        <script src="/cdn/javascripts/stats.js" type="text/javascript">
+        statistics()
+        </script>         
 </head>

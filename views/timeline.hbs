@@ -1,0 +1,53 @@
+
+<head>
+  <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+  <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+  <script src="../../cdn/d3/d3-timeline.js"></script>
+
+  <style type="text/css">
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: black;
+      shape-rendering: crispEdges;
+    }
+
+    .axis text {
+      font-family: sans-serif;
+      font-size: 10px;
+    }
+
+    .timeline-label {
+      font-family: sans-serif;
+      font-size: 12px;
+    }
+
+    #timeline2 .axis {
+      transform: translate(0px,40px);
+      -ms-transform: translate(0px,40px); /* IE 9 */
+      -webkit-transform: translate(0px,40px); /* Safari and Chrome */
+      -o-transform: translate(0px,40px); /* Opera */
+      -moz-transform: translate(0px,40px); /* Firefox */
+    }
+    .coloredDiv {
+      height:20px; width:20px; float:left;
+    }
+  </style>
+  <script type="text/javascript" src="../../cdn/javascripts/dataFile.js">
+  statistics()
+  </script>
+
+
+</head>
+<body>
+  <div>
+    <h3>Release Dates</h3>
+    <div id="timeline1"></div>
+  </div>
+
+ <div>
+<button onclick="dateOfRelease()">release dates</button>
+</div>
+ 
+</body>
+

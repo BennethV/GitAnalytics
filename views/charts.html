@@ -18,6 +18,8 @@ td, th {
  <script src="http://builds.handlebarsjs.com.s3.amazonaws.com/handlebars-v4.0.11.js"></script>
  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="/cdn/javascripts/dataFile.js"></script>
+<script src="../../cdn/d3/d3-timeline.js"></script>
 </head>
 <body>
 
@@ -47,6 +49,23 @@ td, th {
 
   <div class="main">
       <!-- It is better to separate your template from the JS and you do that by placing the template in its own tag -->
+<!--  code from James-->
+<div>
+      <button onclick="dateOfRelease()">release dates</button>
+    </div>
+
+    <div>
+       <div id="timeline1"></div>
+    </div>
+    <div>
+      <div id="clickedBar"></div>
+      <div id="releaser"></div>
+      <div id="date"></div>
+      <div id="SprintLength"></div>
+      <div id="clickedSprintLength"></div>
+    </div>
+    <!--  code from James-->
+
       <div id ="theading" ></div>
       <script id= "table_heading_template" type="text/x-handlebars-template">
         <h1 >{{title}}</h1>
@@ -91,5 +110,6 @@ for (i = 0; i < dropdown.length; i++) {
      
 
   <script type="text/javascript" src="/cdn/javascripts/charts.js"></script>
+  
 </body>
 </html>
