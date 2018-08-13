@@ -1,4 +1,5 @@
 // vim: ts=2 sw=2
+// timeline function
 (function () {
   d3.timeline = function () {
     var DISPLAY_TYPES = ['circle', 'rect']
@@ -17,10 +18,11 @@
       rowSeparatorsColor = null,
       backgroundColor = null,
       tickFormat = { format: d3.time.format('%Y-%m-%d'),
-        tickTime: d3.time.day,
-        tickInterval: 1,
+        tickTime: d3.time.days,
+        tickInterval: 7,
         tickSize: 6,
-        tickValues: null
+        tickValues: null,
+        ticks: 5
       },
       colorCycle = d3.scale.category20(),
       colorPropertyName = null,
@@ -228,7 +230,7 @@
       if (tickFormat.tickValues != null) {
         xAxis.tickValues(tickFormat.tickValues)
       } else {
-        xAxis.ticks(tickFormat.numTicks || tickFormat.tickTime, tickFormat.tickInterval)
+        xAxis.ticks(tickFormat.numTicks || tickFormat.tickTime, tickFormat.ticks)
       }
 
       // draw the chart
