@@ -1,10 +1,11 @@
-var accessToken = 'a8bac075ed9f4ea8418be07b09d4b85ef79c8583'
-var repoName = 'Group-9-Lab'
-var orgName = 'witseie-elen4010'
-
 const getReleases = async () => {
   try {
-    const result = await fetch(`https://api.github.com/repos/${orgName}/${repoName}/releases?access_token=${accessToken}`)
+    await fetch('http://127.0.0.1:3000/javascripts/data.json')
+      .then((res) => res.text())
+      .then(async function (data) {
+        userInfo = JSON.parse(data)
+      })
+    const result = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/releases?access_token=${userInfo.accessToken}`)
     const releases = await result.json()
     return {releases}
   } catch (err) { console.log(err) }
@@ -32,7 +33,7 @@ const dateOfRelease = () => {
         .tickFormat( //
           {format: d3.time.format('%Y-%m-%d'),
             tickTime: d3.time.day,
-            tickInterval: SprintLength,
+            tickInterval: 1, // SprintLength,
             tickSize: 6})
         .margin({left: 70, right: 30, top: 0, bottom: 0})
         .click(function (d, i, datum) {
@@ -139,15 +140,23 @@ function releaseDetais (releaseInfo, i) {
   var releaseDate = new Date((releaseInfo.actualreleaseDates[i + 1]))
   var SprintLength = (releaseInfo.daysElapsed) / day
 
+  const actualDates = releaseInfo.actualreleaseDates
+  // convert to integers for comparison
+  actualDates.forEach(parseInt)
+  var clickedSprintLength = (actualDates[i + 1] - actualDates[i]) / day
+
+  console.log(i)
+  document.getElementById('clickedBar').innerHTML = 'Clicked Bar:   ' + releaseInfo.releaseTags[i]
   document.getElementById('releaser').innerHTML = 'Released by:   ' + releaser
   document.getElementById('date').innerHTML = 'Released on:   ' + releaseDate
-  document.getElementById('SprintLength').innerHTML = 'Sprint Length(days):   ' + SprintLength
+  document.getElementById('SprintLength').innerHTML = 'average Sprint Length(days):   ' + SprintLength
+  document.getElementById('clickedSprintLength').innerHTML = 'Clicked Sprint Length:   ' + clickedSprintLength
 }
 
 const contributions = async () => {
-  const res = await fetch(`https://api.github.com/repos/${orgName}/${repoName}/stats/contributors?access_token=${accessToken}`)
+  const res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/stats/contributors?access_token=${userInfo.accessToken}`)
   const contributions = await res.json()
-  // console.log(contributions)
+  console.log(contributions)
   return {contributions}
 }
 
@@ -168,21 +177,25 @@ const developerContributions = () => {
       conName[i] = contributors[i].author.login
       contributorCommits[i] = contributors[i].total
       for (var j = 0; j < (contributors[i].weeks).length; j++) {
-        data[j] = {
-          'Name': conName[i],
-          'Week': new Date(contributors[i].weeks[j].w),
-          'Aditions_per_Week': contributors[i].weeks[j].a
+        if ((contributors[i].weeks[j].a) !== 0) {
+          const week = convertTimestamp(contributors[i].weeks[j].w)
+          data[j] = {
+            'Name': conName[i],
+            'Week': week,
+            'Aditions_per_Week': contributors[i].weeks[j].a
+          }
         }
       }
       conData[i] = JSON.parse(JSON.stringify(data))
     }
-    genContributorTable(conData)
-    console.log(conData)
+    genContributorTable(data)
+    console.log((conData))
   })
 }
 
 function genContributorTable (data) {
   function tabulate (data, columns) {
+    d3.select('table').remove()
     var table = d3.select('#summary').append('table')
     var thead = table.append('thead')
     var tbody = table.append('tbody')
@@ -215,5 +228,33 @@ function genContributorTable (data) {
   }
 
   // render the tables
-  tabulate(data, ['Name:', 'Week', 'Aditions_per_Week'])
+  tabulate(data, ['Name', 'Week', 'Aditions_per_Week'])
+}
+
+// unix timestamp to current date
+function convertTimestamp (timestamp) {
+  var d = new Date(timestamp * 1000), // Convert the passed timestamp to milliseconds
+    yyyy = d.getFullYear(),
+    mm = ('0' + (d.getMonth() + 1)).slice(-2), // Months are zero based. Add leading 0.
+    dd = ('0' + d.getDate()).slice(-2), // Add leading 0.
+    hh = d.getHours(),
+    h = hh,
+    min = ('0' + d.getMinutes()).slice(-2), // Add leading 0.
+    ampm = 'AM',
+    time
+
+  if (hh > 12) {
+    h = hh - 12
+    ampm = 'PM'
+  } else if (hh === 12) {
+    h = 12
+    ampm = 'PM'
+  } else if (hh == 0) {
+    h = 12
+  }
+
+  // ie: 2013-02-18, 8:35 AM
+  time = yyyy + '-' + mm + '-' + dd + ', ' + h + ':' + min + ' ' + ampm
+
+  return time
 }

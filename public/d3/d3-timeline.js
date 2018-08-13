@@ -21,8 +21,8 @@
         tickTime: d3.time.days,
         tickInterval: 7,
         tickSize: 6,
-        tickValues: null,
-        ticks: 5
+        tickValues: null
+
       },
       colorCycle = d3.scale.category20(),
       colorPropertyName = null,
@@ -230,7 +230,7 @@
       if (tickFormat.tickValues != null) {
         xAxis.tickValues(tickFormat.tickValues)
       } else {
-        xAxis.ticks(tickFormat.numTicks || tickFormat.tickTime, tickFormat.ticks)
+        xAxis.ticks(tickFormat.numTicks || tickFormat.tickTime, tickFormat.tickInterval)
       }
 
       // draw the chart
