@@ -27,10 +27,6 @@ router.post('/', function (req, res, next) {
   userInfo.accessToken = req.body.accessToken;
   (async function () {
     try {
-      fs.writeFile(__dirname + '\\..\\public\\javascripts\\code.txt', accessToken, function (err) {
-        if (err) throw err
-        console.log(err)
-      })
       // from here we can then add the URLs for statistics using our synchronous functions.
       // This gets information about the user
 

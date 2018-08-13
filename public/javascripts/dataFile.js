@@ -33,7 +33,7 @@ const dateOfRelease = () => {
         .tickFormat( //
           {format: d3.time.format('%Y-%m-%d'),
             tickTime: d3.time.day,
-            tickInterval: 1, // SprintLength,
+            tickInterval: SprintLength,
             tickSize: 6})
         .margin({left: 70, right: 30, top: 0, bottom: 0})
         .click(function (d, i, datum) {
@@ -141,16 +141,15 @@ function releaseDetais (releaseInfo, i) {
   var SprintLength = (releaseInfo.daysElapsed) / day
 
   const actualDates = releaseInfo.actualreleaseDates
+  const expectedDates = releaseInfo.expreleaseDates
   // convert to integers for comparison
+  expectedDates.forEach(parseInt)
   actualDates.forEach(parseInt)
-  var clickedSprintLength = (actualDates[i + 1] - actualDates[i]) / day
 
-  console.log(i)
-  document.getElementById('clickedBar').innerHTML = 'Clicked Bar:   ' + releaseInfo.releaseTags[i]
   document.getElementById('releaser').innerHTML = 'Released by:   ' + releaser
   document.getElementById('date').innerHTML = 'Released on:   ' + releaseDate
   document.getElementById('SprintLength').innerHTML = 'average Sprint Length(days):   ' + SprintLength
-  document.getElementById('clickedSprintLength').innerHTML = 'Clicked Sprint Length:   ' + clickedSprintLength
+  document.getElementById('SprintLength').innerHTML = 'Current Sprint Length:   ' + SprintLength
 }
 
 const contributions = async () => {
