@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hello Handlebars</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" type="text/css" href="/cdn/stylesheets/charts.css">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  </link>
+
+  <!-- You can download Handlebars at http:// handlebarsjs.com/ and save it as handlebars-v4.0.2.js on your site. Then make it available by adding the following line. -->
+  <style type="text/css">
+td, th {
+  padding: 4px 10px;
+}
+  </style>
+
+ <script src="http://builds.handlebarsjs.com.s3.amazonaws.com/handlebars-v4.0.11.js"></script>
+ <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+</head>
+<body>
+
+  <div id = "sidenav" class="sidenav">
+    <a id = "overview" href="#overview" >Overview</a>
+    
+    <button class="dropdown-btn">Sprint Statistics 
+      <i class="fa fa-caret-down"></i>
+    </button>
+    <div class="dropdown-container">
+      <a id="sprints" href="#sprints" >Sprint Overview</a>
+      <a  href="#haha">Sprint</a>
+      <a  href="#haha">Sprint</a>
+    </div>
+
+
+    <button class="dropdown-btn">Pull Request Statistics 
+      <i class="fa fa-caret-down"></i>
+    </button>
+    <div class="dropdown-container">
+      <a id="pullOverview" href="#review">Pull Request overview</a>
+      <a id="pullreview" href="#review">Pull Request Review</a>
+      <a id="pullCommits" href="#pullCommits">Pull Request Commits</a>
+    </div>
+
+  </div>
+
+  <div class="main">
+      <!-- It is better to separate your template from the JS and you do that by placing the template in its own tag -->
+      <div id ="theading" ></div>
+      <script id= "table_heading_template" type="text/x-handlebars-template">
+        <h1 >{{title}}</h1>
+      </script>
+
+      <div id="summary">
+
+      </div>
+       <div id="info"></div>
+       <div id="quoteData"></div>
+      <script id="quote-template" type="text/x-handlebars-template">
+
+      <h3>Favorite {{name}} Quotes</h3>
+        <ol>
+        {{!-- 2. The each helper can insert an array of data --}}
+        {{#each quotes}}
+          <li>{{quote}}</li>
+        {{/each}}
+        </ol>
+
+      </script>
+
+      <script>
+/* Loop through all dropdown buttons to toggle between hiding and showing its dropdown content - This allows the user to have multiple dropdowns without any conflict */
+var dropdown = document.getElementsByClassName("dropdown-btn");
+var i;
+
+for (i = 0; i < dropdown.length; i++) {
+  dropdown[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var dropdownContent = this.nextElementSibling;
+    if (dropdownContent.style.display === "block") {
+      dropdownContent.style.display = "none";
+    } else {
+      dropdownContent.style.display = "block";
+    }
+  });
+}
+</script>
+
+  </div>
+     
+
+  <script type="text/javascript" src="/cdn/javascripts/charts.js"></script>
+</body>
+</html>
