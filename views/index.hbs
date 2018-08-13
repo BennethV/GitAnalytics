@@ -300,7 +300,7 @@ hr {
           <div id="myDropdown" class="dropdown-content">
             <input type="text" placeholder="Search.." id="myInput" onkeyup="filterFunction()">
             {{#each repoNames}}
-            <a href="/users/charts" >{{this}}</a>
+            <a href="/users/charts/{{@index}}" >{{this}}</a>
             {{/each}}
           </div>
         </div>
