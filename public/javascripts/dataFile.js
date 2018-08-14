@@ -1,3 +1,18 @@
+$(document).ready(function(){
+   $('#sprints').click(function(){
+     var tableInfor = document.getElementById("table_heading_template").innerHTML;
+    var template = Handlebars.compile(tableInfor);
+    var info = template({
+      title: "Timeline of Sprints"
+    })
+    //document.getElementById('pullReqNo').innerHTML =null;
+    document.getElementById('theading').innerHTML =info ;
+    dateOfRelease()
+    return false; 
+  });
+
+})
+
 const getReleases = async () => {
   try {
     await fetch('http://127.0.0.1:3000/javascripts/data.json')
@@ -42,6 +57,8 @@ const dateOfRelease = () => {
         })
 
       console.log(releaseInfo.releaseInfo.actualreleaseDates[0])
+      d3.select('svg').remove()
+      d3.select('table').remove()
       var svg = d3.select('#timeline1').append('svg').attr('width', 1000).datum(testData).call(chart)
     }
     //  svg.selectAll(".bar").on("click", function(d){location.replace(d.letter+".html");});
@@ -196,7 +213,7 @@ const developerContributions = () => {
 function genContributorTable (data) {
   function tabulate (data, columns) {
     d3.select('table').remove()
-    var table = d3.select('#summary').append('table')
+    var table = d3.select('#james').append('table')
     var thead = table.append('thead')
     var tbody = table.append('tbody')
 
