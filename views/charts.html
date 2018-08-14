@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Hello Handlebars</title>
+  <title>GitHub Anaytics Tool</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link rel="stylesheet" type="text/css" href="/cdn/stylesheets/charts.css">
@@ -25,16 +25,8 @@ td, th {
 
   <div id = "sidenav" class="sidenav">
     <a id = "overview" href="#overview" >Overview</a>
-    
-    <button class="dropdown-btn">Sprint Statistics 
-      <i class="fa fa-caret-down"></i>
-    </button>
-    <div class="dropdown-container">
-      <a id="sprints" href="#sprints" >Sprint Overview</a>
-      <a  href="#haha">Sprint</a>
-      <a  href="#haha">Sprint</a>
-    </div>
-
+    <a id="sprints" href="#sprints" >Sprint Overview</a>
+ 
 
     <button class="dropdown-btn">Pull Request Statistics 
       <i class="fa fa-caret-down"></i>
@@ -42,6 +34,7 @@ td, th {
     <div class="dropdown-container">
       <a id="pullOverview" href="#review">Pull Request overview</a>
       <a id="pullreview" href="#review">Pull Request Review</a>
+      <a id="pullPerDev" href="#pullPerDev">Pull Request Per Developer</a>
       <a id="pullCommits" href="#pullCommits">Pull Request Commits</a>
     </div>
 
@@ -50,20 +43,9 @@ td, th {
   <div class="main">
       <!-- It is better to separate your template from the JS and you do that by placing the template in its own tag -->
 <!--  code from James-->
-<div>
-      <button onclick="dateOfRelease()">release dates</button>
-    </div>
 
-    <div>
-       <div id="timeline1"></div>
-    </div>
-    <div>
-      <div id="clickedBar"></div>
-      <div id="releaser"></div>
-      <div id="date"></div>
-      <div id="SprintLength"></div>
-      <div id="clickedSprintLength"></div>
-    </div>
+
+
     <!--  code from James-->
 
       <div id ="theading" ></div>
@@ -71,9 +53,26 @@ td, th {
         <h1 >{{title}}</h1>
       </script>
 
-      <div id="summary">
-
+      <div id="summary"></div>
+      <div>
+              <div id = "figure"></div>
       </div>
+      <div>
+       <div id="timeline1"></div>
+
+         <div>
+            <div id="clickedBar"></div>
+            <div id="releaser"></div>
+            <div id="date"></div>
+            <div id="SprintLength"></div>
+            <div id="clickedSprintLength"></div>
+            <div id="james"></div>
+          </div>
+      </div>
+
+      
+
+
        <div id="info"></div>
        <div id="quoteData"></div>
       <script id="quote-template" type="text/x-handlebars-template">
