@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
+
   <title>GitHub Anaytics Tool</title>
+
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link rel="stylesheet" type="text/css" href="/cdn/stylesheets/charts.css">
@@ -42,6 +44,21 @@ td, th {
 
   <div class="main">
       <!-- It is better to separate your template from the JS and you do that by placing the template in its own tag -->
+
+      <script id= "commit_template" type="text/x-handlebars-template">
+        <h1>Commits for Pull Request no.
+           <select  id= "pullOption">
+              {{#each pull}}
+                <option  value={{@index}} id={{@index}}>{{number}}</option>
+              {{/each}}
+            </select>
+            by {{name}}
+        </h1>
+
+      </script>
+
+      <div id= "pullReqNo"></div>
+
 <!--  code from James-->
 
 
@@ -109,6 +126,29 @@ for (i = 0; i < dropdown.length; i++) {
      
 
   <script type="text/javascript" src="/cdn/javascripts/charts.js"></script>
-  
+
+  <script>
+/* When the user clicks on the button,
+toggle between hiding and showing the dropdown content */
+function myFunction() {
+    document.getElementById("myDropdown").classList.toggle("show");
+}
+
+function filterFunction() {
+    var input, filter, ul, li, a, i;
+    input = document.getElementById("myInput");
+    filter = input.value.toUpperCase();
+    div = document.getElementById("myDropdown");
+    a = div.getElementsByTagName("a");
+    for (i = 0; i < a.length; i++) {
+        if (a[i].innerHTML.toUpperCase().indexOf(filter) > -1) {
+            a[i].style.display = "";
+        } else {
+            a[i].style.display = "none";
+        }
+    }
+}
+</script>
+
 </body>
 </html>
