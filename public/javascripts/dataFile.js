@@ -1,4 +1,3 @@
-
 var userInfo = ''
 
 $(document).ready(function () {
@@ -14,7 +13,7 @@ $(document).ready(function () {
     return false
   })
 })
-
+// fetches the release information from github
 const getReleases = async () => {
   try {
     await fetch('http://127.0.0.1:3000/javascripts/data.json')
@@ -31,18 +30,24 @@ const getReleases = async () => {
 const dateOfRelease = () => {
   getReleases().then((res) => {
     const releases = res.releases
-    // console.log(releases)
+
     const releaseInfo = getReleaseDates(releases)
     var day = 1000 * 60 * 60 * 24 // this gives a day in milliseconds
     var testData = cleanData(releaseInfo)
     const width = 1000
     var lastDate = (releaseInfo.releaseInfo.expreleaseDates).length - 1
     const SprintLength = releaseInfo.releaseInfo.daysElapsed / day
+    var endDay = ''
+    if (parseInt(releaseInfo.releaseInfo.actualreleaseDates[lastDate]) > parseInt(releaseInfo.releaseInfo.expreleaseDates[lastDate])) {
+      lastDate = releaseInfo.releaseInfo.actualreleaseDates[lastDate]
+    } else if ((releaseInfo.releaseInfo.actualreleaseDates[lastDate]) < parseInt(releaseInfo.releaseInfo.expreleaseDates[lastDate])) {
+      lastDate = releaseInfo.releaseInfo.expreleaseDates[lastDate]
+    }
     function timelineRect () {
       var chart = d3.timeline()
         // d3.select('#timeline1').remove()
         .beginning(releaseInfo.releaseInfo.actualreleaseDates[0]) // we can optionally add beginning and ending times to speed up rendering a little
-        .ending(releaseInfo.releaseInfo.actualreleaseDates[lastDate])
+        .ending(lastDate)
         .showTimeAxisTick() // toggles tick marks
         .stack()
         .width(width)
@@ -55,16 +60,13 @@ const dateOfRelease = () => {
         .margin({left: 70, right: 30, top: 0, bottom: 0})
         .click(function (d, i, datum) {
           releaseDetais(releaseInfo.releaseInfo, i)
-          developerContributions()
         })
-
-      console.log(releaseInfo.releaseInfo.actualreleaseDates[0])
       d3.select('svg').remove()
       d3.select('table').remove()
-
+      developerContributions()
       var svg = d3.select('#timeline1').append('svg').attr('width', 1000).datum(testData).call(chart)
     }
-    //  svg.selectAll(".bar").on("click", function(d){location.replace(d.letter+".html");});
+
     timelineRect()
   })
 }
@@ -92,7 +94,6 @@ function getReleaseDates (releases) {
     if (j === 1) {
       releaseInfo.daysElapsed = noOfDays(releaseInfo.actualreleaseDates[j - 1], releaseInfo.actualreleaseDates[j])
       releaseInfo.releaseDay = date.getDay()
-      // console.log('releas day' + releaseInfo.releaseDay)
     }
     if (i === 0 && releaseInfo.daysElapsed !== 0) {
       var startDate = releaseInfo.actualreleaseDates[0] - releaseInfo.daysElapsed;
@@ -105,6 +106,7 @@ function getReleaseDates (releases) {
   return {releaseInfo}
 }
 
+// gets the difference between two dates
 function noOfDays (date1, date2) {
   var diff = date2 - date1
 
@@ -112,8 +114,10 @@ function noOfDays (date1, date2) {
   return noDays
 }
 
+// modifies data to be in a supported formate for timeline plot
 function cleanData (data) {
   var releaseTime = []
+
   getexpReleaseDates(data.releaseInfo)
 
   const currentData = data.releaseInfo
@@ -122,10 +126,8 @@ function cleanData (data) {
   // convert to integers for comparison
   expectedDates.forEach(parseInt)
   actualDates.forEach(parseInt)
-  // var allDates = arrayUnique(currentData.actualreleaseDates, currentData.expreleaseDates) // contains all expected and actual dates in order. itis used for ploting and finding overlaps
 
   for (var i = 1; i <= actualDates.length; i++) {
-    // should be greater than zero because at zero comparison will be hard
     if (actualDates[i] === expectedDates[i]) {
       releaseTime[i - 1] = {times: [{'color': 'green', 'label': currentData.releaseTags[i - 1], 'starting_time': currentData.expreleaseDates[i - 1], 'ending_time': currentData.actualreleaseDates[i]}] }
     } else if (actualDates[i] > expectedDates[i]) {
@@ -139,8 +141,9 @@ function cleanData (data) {
   return releaseTime
 }
 
+// gives the expected release Dates
 function getexpReleaseDates (releaseInfo) {
-  // var days = 1000 * 60 * 60 * 24 // this gives a day in milliseconds
+  console.log(releaseInfo)
   var daysElapsed = releaseInfo.daysElapsed
 
   var noOfReleases = releaseInfo.actualreleaseDates.length
@@ -151,8 +154,7 @@ function getexpReleaseDates (releaseInfo) {
     releaseInfo.expreleaseDates[i] = releaseInfo.expreleaseDates[i - 1] + nextRelease
   }
 }
-// gets concatenate two arrays to get overlapint days
-
+// sends details to the html file
 function releaseDetais (releaseInfo, i) {
   const day = 1000 * 60 * 60 * 24
   var releaser = (releaseInfo.releaser)[i]
@@ -164,21 +166,19 @@ function releaseDetais (releaseInfo, i) {
   actualDates.forEach(parseInt)
   var clickedSprintLength = (actualDates[i + 1] - actualDates[i]) / day
 
-  // console.log(i)
   document.getElementById('clickedBar').innerHTML = 'Clicked Bar:   ' + releaseInfo.releaseTags[i]
   document.getElementById('releaser').innerHTML = 'Released by:   ' + releaser
   document.getElementById('date').innerHTML = 'Released on:   ' + releaseDate
   document.getElementById('SprintLength').innerHTML = 'average Sprint Length(days):   ' + SprintLength
   document.getElementById('clickedSprintLength').innerHTML = 'Clicked Sprint Length:   ' + clickedSprintLength
 }
-
+// fetches weekly contributions from GitHub
 const contributions = async () => {
   const res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/stats/contributors?access_token=${userInfo.accessToken}`)
   const contributions = await res.json()
-  // console.log(contributions)
   return {contributions}
 }
-
+// filters the received data for ploting
 const developerContributions = () => {
   var conName = []
   var contributorCommits = []
@@ -250,6 +250,7 @@ function convertTimestamp (timestamp) {
 // Setup svg using Bostock's margin convention
 
 function plotBar (data, names) {
+  console.log(data)
   var margin = {top: 80, right: 160, bottom: 100, left: 70}
   var width = 700 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom
@@ -261,12 +262,9 @@ function plotBar (data, names) {
     .append('g')
     .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
 
-    /* Data in strings like it would be if imported from a csv */
-
+  /* Data in strings like it would be if imported from a csv */
   var parse = d3.time.format('%Y-%m-%d').parse
   // Transpose the data into layers
-  console.log(data[0].year)
-
   var dataset = d3.layout.stack()(names.map(function (developer) {
     return data.map(function (d) {
       return {x: parse(d.year), y: +d[developer]}
@@ -337,7 +335,7 @@ function plotBar (data, names) {
 
   // Draw legend
   var legend = svg.selectAll('.legend')
-    .data(colors)
+    .data(names)
     .enter().append('g')
     .attr('class', 'legend')
     .attr('transform', function (d, i) { return 'translate(30,' + i * 19 + ')' })
@@ -346,7 +344,7 @@ function plotBar (data, names) {
     .attr('x', width - 18)
     .attr('width', 18)
     .attr('height', 18)
-    .style('fill', function (d, i) { return colors.slice().reverse()[i] })
+    .style('fill', function (d, i) { return colors.slice()[i] })
 
   legend.append('text')
     .attr('x', width + 5)
@@ -393,10 +391,19 @@ function plotBar (data, names) {
     .attr('text-anchor', 'middle')
     .style('font-size', '20px')
     .style('text-decoration', 'underline')
-    .text('Number of line of code added Vs release dates')
+    .text('Number of line of code added vs release dates')
 }
 
 function colorFunction () {
-  var colorArray = ['#FF6633', '#FFB399', '#6666FF', '#FF33FF']
+  var colorArray = ['#FF6633', '#CC9999', '#FF33FF', '#FFFF99', '#00B3E6',
+    '#E6B333', '#3366E6', '#999966', '#99FF99', '#B34D4D',
+    '#80B300', '#809900', '#E6B3B3', '#6680B3', '#66991A',
+    '#FF99E6', '#CCFF1A', '#FF1A66', '#E6331A', '#33FFCC',
+    '#66994D', '#B366CC', '#4D8000', '#B33300', '#CC80CC',
+    '#66664D', '#991AFF', '#E666FF', '#4DB3FF', '#1AB399',
+    '#E666B3', '#33991A', '#CC9999', '#B3B31A', '#00E680',
+    '#4D8066', '#809980', '#E6FF80', '#1AFF33', '#999933',
+    '#FF3380', '#CCCC00', '#66E64D', '#4D80CC', '#9900B3',
+    '#E64D66', '#4DB380', '#FF4D4D', '#99E6E6', '#6666FF']
   return colorArray
 }
