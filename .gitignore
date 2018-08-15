@@ -60,8 +60,7 @@ typings/
 # next.js build output
 .next
 
-public/
+public/javascripts/data.json
 
-# ignore json files
-.json
+
 
