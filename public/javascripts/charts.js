@@ -10,6 +10,7 @@
   var releases = []
   var closedPulls = []
   var devReleases = []
+  var contributors= []
   var userInfo ={};
 
 (async function(){
@@ -34,7 +35,7 @@
           console.log(closedPulls)
            res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/contributors?access_token=${userInfo.accessToken}`)
 
-          const contributors = await res.json()
+          contributors = await res.json()
           // fetch release information
           res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/releases?access_token=${userInfo.accessToken}`)
           releases = getReleaseDateForPie( await res.json())
@@ -45,18 +46,6 @@
               'name': contributors[i].login,
               'pulls': 0
             } 
-            var release =[]
-            for (var k =0; k < releases.length ; k++) {
-              release[k] ={
-                'number':k+1,
-                'pulls': 0
-              }
-            }
-
-            devReleases[i]= {
-              'name': contributors[i].login,
-              'release': release
-            }
           }
           // loop through closed pull requests
           console.log("Started fetching data")
@@ -221,6 +210,86 @@ $(document).ready(function(){
     //document.getElementById('pullReqNo').innerHTML =null;
     document.getElementById('theading').innerHTML =info ;
     await genPieChart(contributorPullReq)
+
+    // generate statistics for developer pull request table for every release
+    const array =  pullPerDev()
+    var data =[]
+    var z =0
+    for (var i = 0; i < releases.length; i++) {
+      var contributions = ''
+      var total = 0
+      for (var j = 0; j < array.length; j++) {
+        contributions += array[j].name + '('+ ((array[j].release)[i]).pulls +") "
+        total += ((array[j].release)[i]).pulls
+
+      }
+    data[i]={
+      "Release": ((array[i].release)[i]).number,
+      "Total Pull Requests":total,
+      "Developer Pull Requests": contributions
+    }
+    z++
+    }
+    console.log(data)
+    pullPerReleaseTabe(data)
+    return false
+  })
+});
+function pullPerReleaseTabe(data){
+      function tabulate(data, columns) {
+     d3.select('table').remove()
+    var table = d3.select('#releasePerDev').append('table')
+    var thead = table.append('thead')
+    var tbody = table.append('tbody');
+    // append the header row
+    thead.append('tr')
+      .selectAll('th')
+      .data(columns).enter()
+      .append('th')
+      .text(function (column) { return column; });
+
+    // create a row for each object in the data
+    var rows = tbody.selectAll('tr')
+      .data(data)
+      .enter()
+      .append('tr')
+
+
+    // create a cell in each row for each column
+    var cells = rows.selectAll('td')
+      .data(function (row) {
+        return columns.map(function (column) {
+          return {column: column, value: row[column]};
+        });
+      })
+      .enter()
+      .append('td')
+        .text(function (d) { return d.value; });
+
+    return table;
+    }
+
+
+    // render the tables
+    tabulate(data, ['Release', 'Total Pull Requests',"Developer Pull Requests"]);
+}
+function pullPerDev(){
+
+    // populate the object that stores the information per developer
+    for (var i = contributors.length - 1; i >= 0; i--) {
+      var release =[]
+      for (var k =0; k < releases.length ; k++) {
+        release[k] ={
+          'number':k+1,
+          'pulls': 0
+        }
+      }
+
+      devReleases[i]= {
+        'name': contributors[i].login,
+        'release': release
+      }
+    }
     // generate release table
     var pullDates =[]
     //console.log(summary)
@@ -242,20 +311,15 @@ $(document).ready(function(){
     releases.forEach(parseInt)
     var prev = 0
     for( var i =0; i < releases.length; i++ ){
-      console.log("Release number : " + (i+1))
-      console.log("Prev Date : " + prev + "Current Date : "+ releases[i])
       
       for( var j =0; j < pullDates.length; j++){
 
         
         if((pullDates[j] > prev) && (pullDates[j]<= releases[i])){
-          console.log("we found a match for release : "+ (i+1))
           
           for(var k =0; k< devReleases.length; k++){
             if(devReleases[k].name == (summary[j]).User){
-              //console.log("I found a matching name!! "+ devReleases[k].name)
               ((devReleases[k]).release[i]).pulls++
-              console.log(((devReleases[k]).release[i]).pulls)
             }
           }
         }
@@ -267,11 +331,9 @@ $(document).ready(function(){
       prev = releases[i]
     }
 
-    console.log(devReleases)
-    
-    return false
-  })
-});
+    return devReleases
+
+}
 function genPieChart(data){
   // remove table
   d3.select('table').remove()
