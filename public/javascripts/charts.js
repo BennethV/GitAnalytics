@@ -1,3 +1,4 @@
+
   var pullCommits = []
   var pullReqInfor = []
   var commits = []
@@ -353,19 +354,19 @@ function genSummaryTable(data){
     var table = d3.select('#summary').append('table')
     var thead = table.append('thead')
     var tbody = table.append('tbody');
-
     // append the header row
     thead.append('tr')
       .selectAll('th')
       .data(columns).enter()
       .append('th')
-        .text(function (column) { return column; });
+      .text(function (column) { return column; });
 
     // create a row for each object in the data
     var rows = tbody.selectAll('tr')
       .data(data)
       .enter()
-      .append('tr');
+      .append('tr')
+
 
     // create a cell in each row for each column
     var cells = rows.selectAll('td')
@@ -394,19 +395,17 @@ function genReviewTable(data){
     var table = d3.select('#summary').append('table')
     var thead = table.append('thead')
     var tbody = table.append('tbody');
-
     // append the header row
     thead.append('tr')
       .selectAll('th')
       .data(columns).enter()
       .append('th')
-        .text(function (column) { return column; });
-
+      .text(function (column) { return column })
     // create a row for each object in the data
     var rows = tbody.selectAll('tr')
       .data(data)
       .enter()
-      .append('tr');
+      .append('tr')
 
     // create a cell in each row for each column
     var cells = rows.selectAll('td')
@@ -489,3 +488,4 @@ function getReleaseDateForPie (releases) {
   // console.log(releaseInfo.releaser)
   return (releaseInfo).actualreleaseDates
 }
+
