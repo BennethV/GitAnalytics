@@ -1,5 +1,3 @@
-var userInfo = ''
-
 $(document).ready(function () {
   $('#sprints').click(function () {
     var tableInfor = document.getElementById('table_heading_template').innerHTML
@@ -214,6 +212,7 @@ const developerContributions = () => {
         data[i] = obj
       }
     }
+
     plotBar(data, conName)
   })
 }
@@ -406,4 +405,89 @@ function colorFunction () {
     '#FF3380', '#CCCC00', '#66E64D', '#4D80CC', '#9900B3',
     '#E64D66', '#4DB380', '#FF4D4D', '#99E6E6', '#6666FF']
   return colorArray
+};
+
+const getlinesPerPull = async () => {
+  var pullInfo = []
+  for (var i = 0; i < summary.length; i++) {
+    const pullNo = i + 1
+    const result = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/pulls/${pullNo}/files?state=closed&access_token=${userInfo.accessToken}`)
+    const data = await result.json()
+    pullInfo.push(data)
+  }
+  return {pullInfo}
 }
+
+const pullDetails = () => {
+  getlinesPerPull().then((res) => {
+    const pullInfo = res.pullInfo
+
+    for (var i = 0; i < pullInfo.length; i++) {
+      var additions = 0
+      var deletions = 0
+      var nodeAdds = 0
+      var nodeDeletion = 0
+      for (var j = 0; j < pullInfo[i].length; j++) {
+        var filename = ((pullInfo[i])[j]).filename
+        filename = filename.substring(0, 12)
+        if (filename !== 'node_modules') {
+          additions += ((pullInfo[i])[j]).additions
+          deletions += ((pullInfo[i])[j]).deletions
+        } else {
+          nodeAdds += ((pullInfo[i])[j]).additions
+          nodeDeletion += ((pullInfo[i])[j]).deletions
+        }
+      };
+      (summary[i]).normal_Additions = additions;
+      (summary[i]).normal_Delitions = deletions;
+      (summary[i]).node_Additions = nodeAdds;
+      (summary[i]).node_Deletions = nodeDeletion
+    }
+  })
+}
+/*
+function getNames () {
+  var names = []
+  for (var i = 0; i < summary.length; i++) {
+    names[i] = (summary[i]).User
+  }
+  names.removeDuplicates()
+  console.log(names)
+  return names
+}
+
+Array.prototype.removeDuplicates = function () {
+  var input = this
+  var hashObject = new Object()
+
+  for (var i = input.length - 1; i >= 0; i--) {
+    var currentItem = input[i]
+
+    if (hashObject[currentItem] == true) {
+      input.splice(i, 1)
+    }
+
+    hashObject[currentItem] = true
+  }
+  return input
+}
+*/
+/*
+function makeObjects(){
+  var data = []
+  for (var i = 0; i < summary.length; i++){
+   data[i] = { 'year' : summary[i].
+
+   }
+  }
+}
+*/
+/*
+// checking modulefiles
+function isModules (name) {
+  var filename = name.substring(0, 12)
+  if (filename === 'node_modules') {
+    return true
+  } else { return false }
+}
+*/
