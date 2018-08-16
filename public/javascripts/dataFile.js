@@ -44,6 +44,8 @@ const dateOfRelease = () => {
     } else {
       endDay = releaseInfo.releaseInfo.expreleaseDates[lastDate]
     }
+    developerContributions()
+    var contributions = barData(releaseInfo.releaseInfo.actualreleaseDates)
     function timelineRect () {
       var chart = d3.timeline()
         // d3.select('#timeline1').remove()
@@ -61,13 +63,13 @@ const dateOfRelease = () => {
         .margin({left: 70, right: 30, top: 0, bottom: 0})
         .click(function (d, i, datum) {
           releaseDetais(releaseInfo.releaseInfo, i)
+          var sprintBargraph = sprintBarData(getNames(), contributions, i)
+          sprintBar(sprintBargraph)
         })
       d3.select('svg').remove()
       d3.select('table').remove()
 
-      developerContributions()
-
-      plotBar(barData(releaseInfo.releaseInfo.actualreleaseDates), getNames())
+      plotBar(contributions, getNames())
       var svg = d3.select('#timeline1').append('svg').attr('width', 1000).datum(testData).call(chart)
     }
     timelineRect()
@@ -402,7 +404,7 @@ function plotBar (data, names) {
 }
 
 function colorFunction () {
-  var colorArray = ['#FF6633', '#CC9999', '#FF33FF', '#FFFF99', '#00B3E6',
+  var colorArray = ['#99E6E6', '#CC9999', '#FF33FF', '#FFFF99', '#00B3E6',
     '#E6B333', '#3366E6', '#999966', '#99FF99', '#B34D4D',
     '#80B300', '#809900', '#E6B3B3', '#6680B3', '#66991A',
     '#FF99E6', '#CCFF1A', '#FF1A66', '#E6331A', '#33FFCC',
@@ -502,6 +504,82 @@ Array.prototype.removeDuplicates = function () {
     hashObject[currentItem] = true
   }
   return input
+}
+
+// Plots bar graph for each sprint
+function sprintBar (data) {
+  var margin = {top: 20, right: 20, bottom: 70, left: 40},
+    width = 600 - margin.left - margin.right,
+    height = 300 - margin.top - margin.bottom
+
+  // set the ranges
+  var x = d3.scale.ordinal().rangeRoundBands([0, width], 0.05)
+
+  var y = d3.scale.linear().range([height, 0])
+
+  // define the axis
+  var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient('bottom')
+
+  var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient('left')
+    .ticks(10)
+
+  // add the SVG element
+  var svg = d3.select('#barGraph').append('svg')
+    .attr('width', width + margin.left + margin.right)
+    .attr('height', height + margin.top + margin.bottom)
+    .append('g')
+    .attr('transform',
+      'translate(' + margin.left + ',' + margin.top + ')')
+
+  // scale the range of the data
+  x.domain(data.map(function (d) { return d.Letter }))
+  y.domain([0, d3.max(data, function (d) { return d.Freq })])
+
+  // add axis
+  svg.append('g')
+    .attr('class', 'x axis')
+    .attr('transform', 'translate(0,' + height + ')')
+    .call(xAxis)
+    .selectAll('text')
+    .style('text-anchor', 'end')
+    .attr('dx', '-.8em')
+    .attr('dy', '-.55em')
+    .attr('transform', 'rotate(-90)')
+
+  svg.append('g')
+    .attr('class', 'y axis')
+    .call(yAxis)
+    .append('text')
+    .attr('transform', 'rotate(-90)')
+    .attr('y', 5)
+    .attr('dy', '.71em')
+    .style('text-anchor', 'end')
+    .text('Frequency')
+
+  // Add bar chart
+  svg.selectAll('bar')
+    .data(data)
+    .enter().append('rect')
+    .attr('class', 'bar')
+    .attr('x', function (d) { return x(d.name) })
+    .attr('width', x.rangeBand())
+    .attr('y', function (d) { return y(d.Freq) })
+    .attr('height', function (d) { return height - y(d.Freq) })
+}
+
+function sprintBarData (names, contributions, index) {
+  var cleanData = []
+  for (var i = 0; i < names.length; i++) {
+    cleanData[i] = {'name': names[i],
+      'Freq': (contributions[index])[names[i]]
+    }
+  }
+
+  return cleanData
 }
 
 /*
