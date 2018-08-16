@@ -88,7 +88,7 @@ var userInfo = {};
           } else {
             mergeDate = closedPulls[i].closed_at
           }
-          summary[g] = {
+          summary[count] = {
             'Pull_Request': closedPulls[i].number,
             'User': closedPulls[i].user.login,
             'Merge_Date': mergeDate,
@@ -146,6 +146,7 @@ var userInfo = {};
 
         // generate release id and developer pull request per release
         mergedPullPerDev()
+        pullDetails()
         console.log('Done fetching all the information')
         // console.log(summary)
         // console.log(contributorClosedPullReq )
@@ -187,8 +188,17 @@ $(document).ready(function () {
     var info = template({
       title: 'Pull Request Overview'
     })
-    // document.getElementById('pullReqNo').innerHTML =null;
     document.getElementById('theading').innerHTML = info
+    // update the information cards
+    var cardInfor = document.getElementById('cards_template').innerHTML
+    template = Handlebars.compile(cardInfor)
+    var infoCards = template({
+      card1: 'Closed Pulls',
+      card2: 'Merged Pulls',
+      card3: 'Haha',
+      card4: 'HAhaha'
+    })
+    document.getElementById('cards').innerHTML = infoCards
     await genSummaryTable(summary)
     return false
   })
@@ -200,6 +210,15 @@ $(document).ready(function () {
     })
     // document.getElementById('pullReqNo').innerHTML =null;
     document.getElementById('theading').innerHTML = info
+    var cardInfor = document.getElementById('cards_template').innerHTML
+    template = Handlebars.compile(cardInfor)
+    var infoCards = template({
+      card1: 'Closed Pulls Analytics',
+      card2: 'Closed Pulls Analytics',
+      card3: 'Closed Pulls Analytics',
+      card4: 'Closed Pulls Analytics'
+    })
+    document.getElementById('cards').innerHTML = infoCards
     await genReviewTable(pullReview)
 
     return false
@@ -229,6 +248,15 @@ $(document).ready(function () {
     })
     // document.getElementById('pullReqNo').innerHTML =null;
     document.getElementById('theading').innerHTML = info
+    var cardInfor = document.getElementById('cards_template').innerHTML
+    template = Handlebars.compile(cardInfor)
+    var infoCards = template({
+      card1: 'Review ANalytics',
+      card2: 'Review ANalytics',
+      card3: 'Review ANalytics',
+      card4: 'Review ANalytics'
+    })
+    document.getElementById('cards').innerHTML = infoCards
 
     // await genPieChart(contributorClosedPullReq, '#closedPie')
     // generate statistics for developer pull request table for every release

@@ -53,29 +53,32 @@ td, th {
     <!--  code from James-->
 
       <div id ="theading" ></div>
+      <div id= "cards"></div>
       <script id= "table_heading_template" type="text/x-handlebars-template">
         <h1 >{{title}}</h1>
       </script>
-      <div class="row2" >
+      <script id = "cards_template" >
+        <div class="row2" >
 
-        <div class="column2" style="background-color:black;">
-          <h2 style="color:white">Closed Pull Requests</h2>
-          <p style="color:white" >Some text..</p>
+          <div class="column2" style="background-color:black;">
+            <h2 style="color:white">{{card1}}</h2>
+            <p style="color:white" >Some text..</p>
+          </div>
+          <div class="column2" style="background-color:black;">
+            <h2 style="color:white">{{card2}}</h2>
+            <p style="color:white" >Some text..</p>
+          </div>
+          <div class="column2" style="background-color:black;">
+            <h2 style="color:white">{{card3}}</h2>
+            <p style="color:white" >Some text..</p>
+          </div>
+          <div class="column2" style="background-color:black;">
+            <h2 style="color:white">{{card4}}</h2>
+            <p style="color:white" >Some text..</p>
+          </div>
+        
         </div>
-        <div class="column2" style="background-color:black;">
-          <h2 style="color:white">Merged Pull Requests</h2>
-          <p style="color:white" >Some text..</p>
-        </div>
-        <div class="column2" style="background-color:black;">
-          <h2 style="color:white">Total Merges</h2>
-          <p style="color:white" >Some text..</p>
-        </div>
-        <div class="column2" style="background-color:black;">
-          <h2 style="color:white">Hahahaha</h2>
-          <p style="color:white" >Some text..</p>
-        </div>
-      
-      </div>
+      </script>
       <div id="summary"></div>
       <div class = "row">
         <div>
