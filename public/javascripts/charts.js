@@ -24,7 +24,6 @@ var userInfo = {};
         // User's details
         var count = 0
         var res = await fetch(`https://api.github.com/user?access_token=${userInfo.accessToken}`)
-
         const userName = await res.json()
         userInfo.username = userName.login
         // console.log(userInfo.username)
@@ -83,14 +82,21 @@ var userInfo = {};
           }
           // populates the merged pull request object called 'summary'
           var mergeDate = 0
-          if ((closedPulls[i].merged_at != null) && (closedPulls[i].base.ref == 'master')) {
+
+          if (closedPulls[i].merged_at != null) {
             mergeDate = closedPulls[i].merged_at
-            summary.push({
-              'Pull Request': closedPulls[i].number,
-              'User': closedPulls[i].user.login,
-              'Merge_Date': mergeDate,
-              'Message': closedPulls[i].body
-            })
+          } else {
+            mergeDate = closedPulls[i].closed_at
+          }
+          summary[g] = {
+            'Pull_Request': closedPulls[i].number,
+            'User': closedPulls[i].user.login,
+            'Merge_Date': mergeDate,
+            'Message': closedPulls[i].body,
+            'additions': '',
+            'normal_Delitions': '',
+            'node_Additions': '',
+            'node_Deletions': ''
           }
 
           // pull request count per developer
@@ -137,17 +143,14 @@ var userInfo = {};
             }
           }
         }
+
         // generate release id and developer pull request per release
         mergedPullPerDev()
         console.log('Done fetching all the information')
         // console.log(summary)
         // console.log(contributorClosedPullReq )
         // console.log(reviews)
-      }
-      // console.log(summary)
-      // console.log(pullReview)
-
-      catch (err) { console.log(err) }
+      } catch (err) { console.log(err) }
     })
   return false
 })()
@@ -526,13 +529,13 @@ async function closedTabulate (data, columns, div = '#summary') {
 function genSummaryTable (data) {
   d3.select('svg').remove()
   // render the tables
-  tabulate(data, ['Pull Request', 'User', 'Merge_Date', 'Message']) // 2 column table
+  tabulate(data, ['Pull_Request', 'User', 'Merge_Date', 'Message']) // 2 column table
 }
 
 function genReviewTable (data) {
   d3.select('svg').remove()
   // render the tables
-  tabulate(data, ['Pull Request', 'Reviewer', 'Reviewee', 'Date', 'Status', 'Review Message'])
+  tabulate(data, ['Pull_Request', 'Reviewer', 'Reviewee', 'Date', 'Status', 'Review Message'])
 }
 function genPullCommitsTable (stats) {
   d3.select('svg').remove()
