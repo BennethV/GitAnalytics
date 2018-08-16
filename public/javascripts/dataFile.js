@@ -7,6 +7,15 @@ $(document).ready(function () {
     })
     // document.getElementById('pullReqNo').innerHTML =null;
     document.getElementById('theading').innerHTML = info
+    var cardInfor = document.getElementById('cards_template').innerHTML
+    template = Handlebars.compile(cardInfor)
+    var infoCards = template({
+      card1: 'Sprint Analytics',
+      card2: 'Sprint Analytics',
+      card3: 'Sprint Analytics',
+      card4: 'Sprint Analytics'
+    })
+    document.getElementById('cards').innerHTML = infoCards
     dateOfRelease()
     return false
   })
