@@ -44,20 +44,7 @@ td, th {
 
   <div class="main">
       <!-- It is better to separate your template from the JS and you do that by placing the template in its own tag -->
-
-      <script id= "commit_template" type="text/x-handlebars-template">
-        <h1>Commits for Pull Request no.
-           <select  id= "pullOption">
-              {{#each pull}}
-                <option  value={{@index}} id={{@index}}>{{number}}</option>
-              {{/each}}
-            </select>
-            by {{name}}
-        </h1>
-
-      </script>
-
-      <div id= "pullReqNo"></div>
+    
 
 <!--  code from James-->
 
@@ -69,17 +56,42 @@ td, th {
       <script id= "table_heading_template" type="text/x-handlebars-template">
         <h1 >{{title}}</h1>
       </script>
+      <div class="row2" >
 
+        <div class="column2" style="background-color:black;">
+          <h2 style="color:white">Closed Pull Requests</h2>
+          <p style="color:white" >Some text..</p>
+        </div>
+        <div class="column2" style="background-color:black;">
+          <h2 style="color:white">Merged Pull Requests</h2>
+          <p style="color:white" >Some text..</p>
+        </div>
+        <div class="column2" style="background-color:black;">
+          <h2 style="color:white">Total Merges</h2>
+          <p style="color:white" >Some text..</p>
+        </div>
+        <div class="column2" style="background-color:black;">
+          <h2 style="color:white">Hahahaha</h2>
+          <p style="color:white" >Some text..</p>
+        </div>
+      
+      </div>
       <div id="summary"></div>
       <div class = "row">
         <div>
-          <div class = "column" id = "figure" ></div>
+          <div class = "column" id = "mergedPie" style = ></div>
         </div>
         <div>
-          <div class = "column" id = "releasePerDev"></div>
+          <div class = "column" id = "mergedReleasePerDevTable"></div>
+        </div>   
+        <div>
+          <div class = "column" id = "closedPie" style = ></div>
         </div>
-               
+        <div>
+          <div class = "column" id = "closedPullsPerDevTable"></div>
+        </div>               
       </div>
+
       <div>
        <div id="timeline1"></div>
         <div>
