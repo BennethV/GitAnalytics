@@ -1,5 +1,3 @@
-var userInfo = ''
-
 $(document).ready(function () {
   $('#sprints').click(function () {
     var tableInfor = document.getElementById('table_heading_template').innerHTML
@@ -34,20 +32,23 @@ const dateOfRelease = () => {
     const releaseInfo = getReleaseDates(releases)
     var day = 1000 * 60 * 60 * 24 // this gives a day in milliseconds
     var testData = cleanData(releaseInfo)
+
     const width = 1000
     var lastDate = (releaseInfo.releaseInfo.expreleaseDates).length - 1
     const SprintLength = releaseInfo.releaseInfo.daysElapsed / day
     var endDay = ''
-    if (parseInt(releaseInfo.releaseInfo.actualreleaseDates[lastDate]) > parseInt(releaseInfo.releaseInfo.expreleaseDates[lastDate])) {
-      lastDate = releaseInfo.releaseInfo.actualreleaseDates[lastDate]
-    } else if ((releaseInfo.releaseInfo.actualreleaseDates[lastDate]) < parseInt(releaseInfo.releaseInfo.expreleaseDates[lastDate])) {
-      lastDate = releaseInfo.releaseInfo.expreleaseDates[lastDate]
+    const actualLastDay = parseInt(releaseInfo.releaseInfo.actualreleaseDates[lastDate])
+    const expLastDay = parseInt(releaseInfo.releaseInfo.expreleaseDates[lastDate])
+    if (actualLastDay > expLastDay) {
+      endDay = releaseInfo.releaseInfo.actualreleaseDates[lastDate]
+    } else {
+      endDay = releaseInfo.releaseInfo.expreleaseDates[lastDate]
     }
     function timelineRect () {
       var chart = d3.timeline()
         // d3.select('#timeline1').remove()
         .beginning(releaseInfo.releaseInfo.actualreleaseDates[0]) // we can optionally add beginning and ending times to speed up rendering a little
-        .ending(lastDate)
+        .ending(endDay)
         .showTimeAxisTick() // toggles tick marks
         .stack()
         .width(width)
@@ -63,10 +64,12 @@ const dateOfRelease = () => {
         })
       d3.select('svg').remove()
       d3.select('table').remove()
+
       developerContributions()
+
+      plotBar(barData(releaseInfo.releaseInfo.actualreleaseDates), getNames())
       var svg = d3.select('#timeline1').append('svg').attr('width', 1000).datum(testData).call(chart)
     }
-
     timelineRect()
   })
 }
@@ -143,7 +146,7 @@ function cleanData (data) {
 
 // gives the expected release Dates
 function getexpReleaseDates (releaseInfo) {
-  console.log(releaseInfo)
+  // console.log(releaseInfo)
   var daysElapsed = releaseInfo.daysElapsed
 
   var noOfReleases = releaseInfo.actualreleaseDates.length
@@ -214,13 +217,15 @@ const developerContributions = () => {
         data[i] = obj
       }
     }
-    plotBar(data, conName)
+    // console.log(data)
+    // console.log('Names')
+    // console.log(conName)
   })
 }
 
 // unix timestamp to current date
 function convertTimestamp (timestamp) {
-  var d = new Date(timestamp * 1000), // Convert the passed timestamp to milliseconds
+  var d = new Date(timestamp), // Convert the passed timestamp to milliseconds
     yyyy = d.getFullYear(),
     mm = ('0' + (d.getMonth() + 1)).slice(-2), // Months are zero based. Add leading 0.
     dd = ('0' + d.getDate()).slice(-2), // Add leading 0.
@@ -239,6 +244,7 @@ function convertTimestamp (timestamp) {
   } else if (hh == 0) {
     h = 12
   }
+
   // ie: 2013-02-18, 8:35 AM
   time = yyyy + '-' + mm + '-' + dd
 
@@ -250,6 +256,8 @@ function convertTimestamp (timestamp) {
 // Setup svg using Bostock's margin convention
 
 function plotBar (data, names) {
+  // console.log(data)
+  console.log(names)
   console.log(data)
   var margin = {top: 80, right: 160, bottom: 100, left: 70}
   var width = 700 - margin.left - margin.right,
@@ -320,7 +328,6 @@ function plotBar (data, names) {
     .attr('x', function (d) { return x(d.x) })
     .attr('y', function (d) {
       return y(d.y0 + d.y)
-      console.log(d.y0); console.log(d.y)
     })
     .attr('height', function (d) { return y(d.y0) - y(d.y0 + d.y) })
     .attr('width', x.rangeBand())
@@ -406,4 +413,113 @@ function colorFunction () {
     '#FF3380', '#CCCC00', '#66E64D', '#4D80CC', '#9900B3',
     '#E64D66', '#4DB380', '#FF4D4D', '#99E6E6', '#6666FF']
   return colorArray
+};
+
+const getlinesPerPull = async () => {
+  var pullInfo = []
+  for (var i = 0; i < summary.length; i++) {
+    const pullNo = (summary[i]).Pull_Request
+    const result = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/pulls/${pullNo}/files?state=closed&access_token=${userInfo.accessToken}`)
+    const data = await result.json()
+    pullInfo.push(data)
+  }
+  return {pullInfo}
 }
+
+const pullDetails = () => {
+  getlinesPerPull().then((res) => {
+    const pullInfo = res.pullInfo
+
+    for (var i = 0; i < pullInfo.length; i++) {
+      var additions = 0
+      var deletions = 0
+      var nodeAdds = 0
+      var nodeDeletion = 0
+      for (var j = 0; j < pullInfo[i].length; j++) {
+        var filename = ((pullInfo[i])[j]).filename
+        filename = filename.substring(0, 12)
+        if (filename !== 'node_modules') {
+          additions += ((pullInfo[i])[j]).additions
+          deletions += ((pullInfo[i])[j]).deletions
+        } else {
+          nodeAdds += ((pullInfo[i])[j]).additions
+          nodeDeletion += ((pullInfo[i])[j]).deletions
+        }
+      };
+      (summary[i]).additions = additions;
+      (summary[i]).normal_Delitions = deletions;
+      (summary[i]).node_Additions = nodeAdds;
+      (summary[i]).node_Deletions = nodeDeletion
+    }
+  })
+}
+
+function barData (releaseDates) {
+  console.log(releaseDates)
+  var data = []
+  const names = getNames()
+  for (var i = 0; i < releaseDates.length - 1; i++) {
+    var obj = {}
+    for (var j = 0; j < names.length; j++) {
+      obj[names[j]] = 0
+    }
+    data[i] = obj
+    // console.log(data[i])
+  }
+  // console.log(data)
+
+  // console.log(summary)
+
+  for (var i = 0; i < summary.length; i++) {
+    (data[((summary[i]).release_id - 1)])[(summary[i]).User] += (summary[i]).additions
+    var yr = releaseDates[((summary[i]).release_id)];
+    (data[((summary[i]).release_id - 1)])['year'] = convertTimestamp(yr)
+  }
+  // console.log(data)
+  return data
+}
+
+function getNames () {
+  var names = []
+  for (var i = 0; i < summary.length; i++) {
+    names[i] = (summary[i]).User
+  }
+  names.removeDuplicates()
+  return names
+}
+
+Array.prototype.removeDuplicates = function () {
+  var input = this
+  var hashObject = new Object()
+
+  for (var i = input.length - 1; i >= 0; i--) {
+    var currentItem = input[i]
+
+    if (hashObject[currentItem] == true) {
+      input.splice(i, 1)
+    }
+
+    hashObject[currentItem] = true
+  }
+  return input
+}
+
+/*
+function makeObjects(){
+  var data = []
+  for (var i = 0; i < summary.length; i++){
+   data[i] = { 'year' : summary[i].
+
+   }
+  }
+}
+*/
+/*
+// checking modulefiles
+function isModules (name) {
+  var filename = name.substring(0, 12)
+  if (filename === 'node_modules') {
+    return true
+  } else { return false }
+}
+*/

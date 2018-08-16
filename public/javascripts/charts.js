@@ -23,7 +23,6 @@ var userInfo = {};
         // User's details
         var count = 0
         var res = await fetch(`https://api.github.com/user?access_token=${userInfo.accessToken}`)
-
         const userName = await res.json()
         userInfo.username = userName.login
         // console.log(userInfo.username)
@@ -48,6 +47,7 @@ var userInfo = {};
         }
         // loop through closed pull requests
         console.log('Started fetching data')
+
         var g = 0
         for (var i = (closedPulls).length - 1; i >= 0; i--) {
           // commits per pull request
@@ -69,14 +69,21 @@ var userInfo = {};
             }
           }
           var mergeDate = 0
-          if ((closedPulls[i].merged_at != null) && (closedPulls[i].base.ref == 'master')) {
+
+          if (closedPulls[i].merged_at != null) {
             mergeDate = closedPulls[i].merged_at
-            summary.push({
-              'Pull Request': closedPulls[i].number,
-              'User': closedPulls[i].user.login,
-              'Merge_Date': mergeDate,
-              'Message': closedPulls[i].body
-            })
+          } else {
+            mergeDate = closedPulls[i].closed_at
+          }
+          summary[g] = {
+            'Pull_Request': closedPulls[i].number,
+            'User': closedPulls[i].user.login,
+            'Merge_Date': mergeDate,
+            'Message': closedPulls[i].body,
+            'additions': '',
+            'normal_Delitions': '',
+            'node_Additions': '',
+            'node_Deletions': ''
           }
 
           // pull request count per developer
@@ -93,7 +100,7 @@ var userInfo = {};
           if ((reviews[i]).length != 0) {
             for (var k = 0; k < (reviews[i]).length; ++k) {
               pullReview[count] = {
-                'Pull Request': closedPulls[i].number,
+                'Pull_Request': closedPulls[i].number,
                 'Reviewer': ((reviews[i])[k]).user.login,
                 'Reviewee': closedPulls[i].user.login,
                 'Date': ((reviews[i])[k]).submitted_at,
@@ -109,17 +116,16 @@ var userInfo = {};
           }
           g++
         }
+
         // generate release id and developer pull request per release
+
         pullPerDev()
+        pullDetails()
         console.log('Done fetching all the information')
-        console.log(summary)
+        // console.log(summary)
         // console.log(contributorPullReq )
         // console.log(reviews)
-      }
-      // console.log(summary)
-      // console.log(pullReview)
-
-      catch (err) { console.log(err) }
+      } catch (err) { console.log(err) }
     })
   return false
 })()
@@ -419,7 +425,7 @@ function genSummaryTable (data) {
   }
 
   // render the tables
-  tabulate(data, ['Pull Request', 'User', 'Merge_Date', 'Message']) // 2 column table
+  tabulate(data, ['Pull_Request', 'User', 'Merge_Date', 'Message']) // 2 column table
 }
 
 function genReviewTable (data) {
@@ -456,7 +462,7 @@ function genReviewTable (data) {
   }
 
   // render the tables
-  tabulate(data, ['Pull Request', 'Reviewer', 'Reviewee', 'Date', 'Status', 'Review Message'])
+  tabulate(data, ['Pull_Request', 'Reviewer', 'Reviewee', 'Date', 'Status', 'Review Message'])
 }
 function genPullCommitsTable (stats) {
   d3.select('table').remove()
