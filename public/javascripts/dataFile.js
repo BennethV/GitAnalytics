@@ -7,13 +7,15 @@ $(document).ready(function () {
     })
     // document.getElementById('pullReqNo').innerHTML =null;
     document.getElementById('theading').innerHTML = info
+    plotTimeline()
     var cardInfor = document.getElementById('cards_template').innerHTML
     template = Handlebars.compile(cardInfor)
     var infoCards = template({
-      card1: 'Sprint Analytics',
-      card2: 'Sprint Analytics',
-      card3: 'Sprint Analytics',
-      card4: 'Sprint Analytics'
+      card1: 'Updated By james',
+      card2: 'wefeskjv ',
+      card3: 'Updfdlkjgd',
+      card4: 'vekluriCIRT'
+
     })
     document.getElementById('cards').innerHTML = infoCards
 
@@ -22,6 +24,11 @@ $(document).ready(function () {
     return false
   })
 })
+// declaring all variables that needs to be updated
+var contributionsPerSprint = ''
+var rawReleaseData = []
+var loginDetails = ''
+var releaseInfo = {}
 // fetches the release information from github
 const getReleases = async () => {
   try {
@@ -30,64 +37,69 @@ const getReleases = async () => {
       .then(async function (data) {
         userInfo = JSON.parse(data)
       })
-    const result = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/releases?access_token=${userInfo.accessToken}`)
-    const releases = await result.json()
-    return {releases}
+    const res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/releases?access_token=${userInfo.accessToken}`)
+    const rawReleaseInfo = await res.json()
+    return {rawReleaseInfo}
   } catch (err) { console.log(err) }
 }
 // draws the timeline
 const dateOfRelease = () => {
   getReleases().then((res) => {
-    const releases = res.releases
-
-    const releaseInfo = getReleaseDates(releases)
-    var day = 1000 * 60 * 60 * 24 // this gives a day in milliseconds
-    var testData = cleanData(releaseInfo)
-
-    const width = 1000
-    var lastDate = (releaseInfo.releaseInfo.expreleaseDates).length - 1
-    const SprintLength = releaseInfo.releaseInfo.daysElapsed / day
-    var endDay = ''
-    const actualLastDay = parseInt(releaseInfo.releaseInfo.actualreleaseDates[lastDate])
-    const expLastDay = parseInt(releaseInfo.releaseInfo.expreleaseDates[lastDate])
-    if (actualLastDay > expLastDay) {
-      endDay = releaseInfo.releaseInfo.actualreleaseDates[lastDate]
-    } else {
-      endDay = releaseInfo.releaseInfo.expreleaseDates[lastDate]
-    }
-    function timelineRect () {
-      var chart = d3.timeline()
-        // d3.select('#timeline1').remove()
-        .beginning(releaseInfo.releaseInfo.actualreleaseDates[0]) // we can optionally add beginning and ending times to speed up rendering a little
-        .ending(endDay)
-        .showTimeAxisTick() // toggles tick marks
-        .stack()
-        .width(width)
-        .rotateTicks(45)
-        .tickFormat( //
-          {format: d3.time.format('%Y-%m-%d'),
-            tickTime: d3.time.day,
-            tickInterval: 1, // SprintLength,
-            tickSize: 6})
-        .margin({left: 70, right: 30, top: 0, bottom: 0})
-        .click(function (d, i, datum) {
-          releaseDetais(releaseInfo.releaseInfo, i)
-        })
-      d3.select('svg').remove()
-      d3.select('table').remove()
-
-      developerContributions()
-
-      plotBar(barData(releaseInfo.releaseInfo.actualreleaseDates), getNames())
-      var svg = d3.select('#timeline1').append('svg').attr('width', 1000).datum(testData).call(chart)
-    }
-    timelineRect()
+    rawReleaseData = res.rawReleaseInfo
+    console.log(rawReleaseData)
+    getReleaseDates()
+    developerContributions()
   })
 }
 
+function plotTimeline () {
+  var day = 1000 * 60 * 60 * 24 // this gives a day in milliseconds
+  var testData = cleanData()
+
+  const width = 1000
+  var lastDate = (releaseInfo.expreleaseDates).length - 1
+  const SprintLength = releaseInfo.daysElapsed / day
+  var endDay = ''
+  const actualLastDay = parseInt(releaseInfo.actualreleaseDates[lastDate])
+  const expLastDay = parseInt(releaseInfo.expreleaseDates[lastDate])
+  if (actualLastDay > expLastDay) {
+    endDay = releaseInfo.actualreleaseDates[lastDate]
+  } else {
+    endDay = releaseInfo.expreleaseDates[lastDate]
+  }
+
+  function timelineRect () {
+    var chart = d3.timeline()
+      // d3.select('#timeline1').remove()
+      .beginning(releaseInfo.actualreleaseDates[0]) // we can optionally add beginning and ending times to speed up rendering a little
+      .ending(endDay)
+      .showTimeAxisTick() // toggles tick marks
+      .stack()
+      .width(width)
+      .rotateTicks(45)
+      .tickFormat( //
+        {format: d3.time.format('%Y-%m-%d'),
+          tickTime: d3.time.day,
+          tickInterval: 1, // SprintLength,
+          tickSize: 6})
+      .margin({left: 70, right: 30, top: 0, bottom: 0})
+      .click(function (d, i, datum) {
+        const relDetails = releaseDetais(i)
+        var sprintBarInfo = sprintBarData(getNames(), contributionsPerSprint, i)
+        if (sprintBarInfo.length !== 0) {
+          sprintBar(sprintBarInfo, relDetails, i)
+        }
+      })
+    d3.selectAll('table').remove()
+    d3.selectAll('svg').remove()
+
+    var svg = d3.select('#timeline1').append('svg').attr('width', 1000).datum(testData).call(chart)
+  }
+  timelineRect()
+}
 // gets the release dates and stores them
-function getReleaseDates (releases) {
-  var releaseInfo = {
+function getReleaseDates () {
+  releaseInfo = {
     actualreleaseDates: [],
     releaseTags: [],
     daysElapsed: '',
@@ -96,12 +108,13 @@ function getReleaseDates (releases) {
     releaseDay: '',
     releaser: []
   }
+  console.log(rawReleaseData)
   var j = 0
-  for (var i = releases.length - 1; i >= 0; i--) {
-    const date = new Date((releases[i].published_at).substring(0, 10))
+  for (var i = rawReleaseData.length - 1; i >= 0; i--) {
+    const date = new Date((rawReleaseData[i].published_at).substring(0, 10))
     releaseInfo.actualreleaseDates[j] = date.getTime()
-    releaseInfo.releaser[j] = releases[i].author.login
-    releaseInfo.releaseTags[j] = releases[i].tag_name
+    releaseInfo.releaser[j] = rawReleaseData[i].author.login
+    releaseInfo.releaseTags[j] = rawReleaseData[i].tag_name
     releaseInfo.releaseDays[j] = date.getDay()
 
     //
@@ -116,8 +129,6 @@ function getReleaseDates (releases) {
     }
     j++
   }
-
-  return {releaseInfo}
 }
 
 // gets the difference between two dates
@@ -129,12 +140,12 @@ function noOfDays (date1, date2) {
 }
 
 // modifies data to be in a supported formate for timeline plot
-function cleanData (data) {
+function cleanData () {
   var releaseTime = []
 
-  getexpReleaseDates(data.releaseInfo)
+  getexpReleaseDates()
 
-  const currentData = data.releaseInfo
+  const currentData = releaseInfo
   const actualDates = currentData.actualreleaseDates
   const expectedDates = currentData.expreleaseDates
   // convert to integers for comparison
@@ -156,7 +167,7 @@ function cleanData (data) {
 }
 
 // gives the expected release Dates
-function getexpReleaseDates (releaseInfo) {
+function getexpReleaseDates () {
   // console.log(releaseInfo)
   var daysElapsed = releaseInfo.daysElapsed
 
@@ -169,8 +180,9 @@ function getexpReleaseDates (releaseInfo) {
   }
 }
 // sends details to the html file
-function releaseDetais (releaseInfo, i) {
+function releaseDetais (i) {
   const day = 1000 * 60 * 60 * 24
+  console.log(releaseInfo)
   var releaser = (releaseInfo.releaser)[i]
   var releaseDate = new Date((releaseInfo.actualreleaseDates[i + 1]))
   var SprintLength = (releaseInfo.daysElapsed) / day
@@ -180,31 +192,33 @@ function releaseDetais (releaseInfo, i) {
   actualDates.forEach(parseInt)
   var clickedSprintLength = (actualDates[i + 1] - actualDates[i]) / day
 
-  document.getElementById('clickedBar').innerHTML = 'Clicked Bar:   ' + releaseInfo.releaseTags[i]
-  document.getElementById('releaser').innerHTML = 'Released by:   ' + releaser
-  document.getElementById('date').innerHTML = 'Released on:   ' + releaseDate
-  document.getElementById('SprintLength').innerHTML = 'average Sprint Length(days):   ' + SprintLength
-  document.getElementById('clickedSprintLength').innerHTML = 'Clicked Sprint Length:   ' + clickedSprintLength
+  var temp = ['Sprint', 'Released by', 'Released on', 'average Sprint Length(days)', 'Selected Sprint Length' ]
+  var clickedSprintkeys = ['release Information', 'Details']
+  var tempDetails = [releaseInfo.releaseTags[i], releaser, releaseDate, SprintLength, clickedSprintLength]
+
+  var clickedSprintData = []
+  for (var j = 0; j < 4; j++) {
+    clickedSprintData[j] = {'release Information': temp[j],
+      'Details': tempDetails[j]
+    }
+  }
+  var obj = {'data': clickedSprintData, 'columns': clickedSprintkeys}
+  return obj
+  // tabulateSprintInfo(clickedSprintData, clickedSprintkeys, div = '#summary')
 }
 // fetches weekly contributions from GitHub
 const contributions = async () => {
   const res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/stats/contributors?access_token=${userInfo.accessToken}`)
-  const contributions = await res.json()
-  return {contributions}
+  const weeklyContributions = await res.json()
+  return {weeklyContributions}
 }
 // filters the received data for ploting
 const developerContributions = () => {
   var conName = []
-  var contributorCommits = []
-  var addPerWeek = []
-  var weeks = []
-
   var data = []
-  var conData = []
-  contributions().then((res) => {
-    const contributors = res.contributions
 
-    var totalAdditions = []
+  contributions().then((res) => {
+    const contributors = res.weeklyContributions
 
     for (var i = 0; i < ((contributors[0]).weeks).length; i++) {
       var k = 0 // this variable will be used to track number of contributors down there
@@ -216,7 +230,6 @@ const developerContributions = () => {
         if (i === 0) {
           conName[j] = contributors[j].author.login
         }
-        // s}
       }
 
       for (var n = 0; n < conName.length; n++) {
@@ -228,9 +241,6 @@ const developerContributions = () => {
         data[i] = obj
       }
     }
-    // console.log(data)
-    // console.log('Names')
-    // console.log(conName)
   })
 }
 
@@ -273,7 +283,8 @@ function plotBar (data, names) {
   var margin = {top: 80, right: 160, bottom: 100, left: 70}
   var width = 700 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom
-
+  d3.selectAll('table').remove()
+  d3.selectAll('svg').remove()
   var svg = d3.select('#barGraph')
     .append('svg')
     .attr('width', width + margin.left + margin.right)
@@ -413,7 +424,7 @@ function plotBar (data, names) {
 }
 
 function colorFunction () {
-  var colorArray = ['#FF6633', '#CC9999', '#FF33FF', '#FFFF99', '#00B3E6',
+  var colorArray = ['#99E6E6', '#CC9999', '#FF33FF', '#FFFF99', '#00B3E6',
     '#E6B333', '#3366E6', '#999966', '#99FF99', '#B34D4D',
     '#80B300', '#809900', '#E6B3B3', '#6680B3', '#66991A',
     '#FF99E6', '#CCFF1A', '#FF1A66', '#E6331A', '#33FFCC',
@@ -462,10 +473,12 @@ const pullDetails = () => {
       (summary[i]).node_Additions = nodeAdds;
       (summary[i]).node_Deletions = nodeDeletion
     }
+    contributionsPerSprint = stackeBarData(releaseInfo.actualreleaseDates)
+    console.log(contributionsPerSprint)
   })
 }
 
-function barData (releaseDates) {
+function stackeBarData (releaseDates) {
   console.log(releaseDates)
   var data = []
   const names = getNames()
@@ -514,6 +527,119 @@ Array.prototype.removeDuplicates = function () {
   }
   return input
 }
+
+// Plots bar graph for each sprint
+function sprintBar (barData, tableData, i) {
+  var data = barData
+  console.log(data)
+  var margin = {top: 20, right: 20, bottom: 70, left: 40},
+    width = 400 - margin.left - margin.right,
+    height = 300 - margin.top - margin.bottom
+
+  // set the ranges
+  var x = d3.scale.ordinal().rangeRoundBands([0, width], 0.05)
+
+  var y = d3.scale.linear().range([height, 0])
+
+  // define the axis
+  var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient('bottom')
+
+  var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient('left')
+    .ticks(10)
+
+  // add the SVG element
+  if (i === 0) {
+    var svg = d3.select('#sprintBarGraph1').append('svg')
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom)
+      .append('g')
+      .attr('transform',
+        'translate(' + margin.left + ',' + margin.top + ')')
+  } else if (i === 1) {
+    var svg = d3.select('#sprintBarGraph2').append('svg')
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom)
+      .append('g')
+      .attr('transform',
+        'translate(' + margin.left + ',' + margin.top + ')')
+  } else if (i === 2) {
+    var svg = d3.select('#sprintBarGraph3').append('svg')
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom)
+      .append('g')
+      .attr('transform',
+        'translate(' + margin.left + ',' + margin.top + ')')
+  } else if (i === 3) {
+    var svg = d3.select('#sprintBarGraph4').append('svg')
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom)
+      .append('g')
+      .attr('transform',
+        'translate(' + margin.left + ',' + margin.top + ')')
+  }
+  // scale the range of the data
+  x.domain(data.map(function (d) { return d.Letter }))
+  y.domain([0, d3.max(data, function (d) { return d.Freq })])
+
+  // add axis
+  svg.append('g')
+    .attr('class', 'x axis')
+    .attr('transform', 'translate(0,' + height + ')')
+    .call(xAxis)
+    .selectAll('text')
+    .style('text-anchor', 'end')
+    .attr('dx', '-.8em')
+    .attr('dy', '-.55em')
+    .attr('transform', 'rotate(-90)')
+
+  svg.append('g')
+    .attr('class', 'y axis')
+    .call(yAxis)
+    .append('text')
+    .attr('transform', 'rotate(-90)')
+    .attr('y', 5)
+    .attr('dy', '.71em')
+    .style('text-anchor', 'end')
+    .text('Lines of Code')
+  //   tabulate()
+  // Add bar chart
+  if (i === 0) {
+    tabulate(tableData.data, tableData.columns, div = '#releaseDetailsTable1')
+  } else if (i === 1) {
+    tabulate(tableData.data, tableData.columns, div = '#releaseDetailsTable2')
+  } else if (i === 2) {
+    tabulate(tableData.data, tableData.columns, div = '#releaseDetailsTable3')
+  } else if (i === 3) {
+    tabulate(tableData.data, tableData.columns, div = '#releaseDetailsTable4')
+  }
+  svg.selectAll('bar')
+    .data(data)
+    .enter().append('rect')
+    .attr('class', 'bar')
+    .attr('x', function (d) { return x(d.Letter) })
+    .attr('width', x.rangeBand())
+    .attr('y', function (d) { return y(d.Freq) })
+    .attr('height', function (d) { return height - y(d.Freq) })
+}
+
+function sprintBarData (names, contributions, index) {
+  var cleanData = []
+  for (var i = 0; i < names.length; i++) {
+    cleanData[i] = {'Letter': names[i],
+      'Freq': (contributions[index])[names[i]]
+    }
+  }
+
+  return cleanData
+}
+
+(function () {
+  dateOfRelease()
+})()
 
 /*
 function makeObjects(){

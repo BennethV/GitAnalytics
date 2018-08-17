@@ -157,6 +157,7 @@ $(document).ready(function () {
     document.getElementById('cards').innerHTML = null
 
     document.getElementById('3cards').innerHTML = null
+    plotBar(contributionsPerSprint, getNames())
     return false
   })
   $('#sprintsss').click(function () {

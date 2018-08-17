@@ -161,3 +161,30 @@
         width: 100%;
     }
 }
+
+ .bar{
+    fill: steelblue;
+  }
+
+  .bar:hover{
+    fill: brown;
+  }
+
+    .axis {
+      font: 10px sans-serif;
+    }
+
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+
+    .fixedDiv {
+    position: absolute;
+    padding: 4px;
+    border: 1px solid gray; 
+    border-radius: 4px;
+    background-color: lightblue;
+}
