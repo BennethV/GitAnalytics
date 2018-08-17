@@ -54,6 +54,7 @@ td, th {
 
       <div id ="theading" ></div>
       <div id= "cards"></div>
+      <div id= "3cards"></div>
       <script id= "table_heading_template" type="text/x-handlebars-template">
         <h1 >{{title}}</h1>
       </script>
@@ -62,19 +63,37 @@ td, th {
 
           <div class="column2" style="background-color:black;">
             <h2 style="color:white">{{card1}}</h2>
-            <p style="color:white" >Some text..</p>
+            <p style="color:white" >{{text1}}</p>
           </div>
           <div class="column2" style="background-color:black;">
             <h2 style="color:white">{{card2}}</h2>
-            <p style="color:white" >Some text..</p>
+            <p style="color:white" >{{text2}}</p>
           </div>
           <div class="column2" style="background-color:black;">
             <h2 style="color:white">{{card3}}</h2>
-            <p style="color:white" >Some text..</p>
+            <p style="color:white" >{{text3}}</p>
           </div>
           <div class="column2" style="background-color:black;">
             <h2 style="color:white">{{card4}}</h2>
-            <p style="color:white" >Some text..</p>
+            <p style="color:white" >{{text4}}</p>
+          </div>
+        
+        </div>
+      </script>
+      <script id = "3cards_template" >
+        <div class="row3" >
+
+          <div class="column3" style="background-color:black;">
+            <h2 style="color:white">{{card1}}</h2>
+            <p style="color:white" >{{text1}}</p>
+          </div>
+          <div class="column3" style="background-color:black;">
+            <h2 style="color:white">{{card2}}</h2>
+            <p style="color:white" >{{text2}}</p>
+          </div>
+          <div class="column3" style="background-color:black;">
+            <h2 style="color:white">{{card3}}</h2>
+            <p style="color:white" >{{text3}}</p>
           </div>
         
         </div>

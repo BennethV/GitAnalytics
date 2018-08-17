@@ -16,6 +16,8 @@ $(document).ready(function () {
       card4: 'Sprint Analytics'
     })
     document.getElementById('cards').innerHTML = infoCards
+
+    document.getElementById('3cards').innerHTML = null
     dateOfRelease()
     return false
   })
