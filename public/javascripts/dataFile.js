@@ -18,6 +18,9 @@ $(document).ready(function () {
 
     })
     document.getElementById('cards').innerHTML = infoCards
+
+    document.getElementById('3cards').innerHTML = null
+    dateOfRelease()
     return false
   })
 })
