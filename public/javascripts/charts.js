@@ -159,7 +159,7 @@ var userInfo = {};
 // href functions
 $(document).ready(function () {
   $('#overview').click(function () {
-    console.log('It works!!')
+    plotBar(contributionsPerSprint, getNames())
     return false
   })
   $('#sprintsss').click(function () {
@@ -575,8 +575,6 @@ function genPullCommitsTable (stats) {
 }
 // table generating function
 function tabulate (data, columns, div = '#summary') {
-  d3.selectAll('table').remove()
-  d3.selectAll('svg').remove()
   var table = d3.select(div).append('table')
   var thead = table.append('thead')
   var tbody = table.append('tbody')
