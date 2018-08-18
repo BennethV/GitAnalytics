@@ -31,7 +31,7 @@ var userInfo = {};
         // fetches repo list from selected organisation
         res = await fetch(`https://api.github.com/orgs/${userInfo.organisation}/repos?&access_token=${userInfo.accessToken}`)
         repoList = await res.json()
-        console.log(repoList)
+        // console.log(repoList)
         // repository pulls
         var res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/pulls?state=closed&access_token=${userInfo.accessToken}`)
 
@@ -89,6 +89,7 @@ var userInfo = {};
               'Merge_Date': mergeDate,
               'Message': closedPulls[i].body,
               'Total_Commits': 0,
+              'Branch': closedPulls[i].head.ref,
               'additions': '',
               'normal_Delitions': '',
               'node_Additions': '',

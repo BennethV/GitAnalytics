@@ -21,6 +21,9 @@ $(document).ready(function () {
 
     document.getElementById('3cards').innerHTML = null
     dateOfRelease()
+
+    togglePopUp()
+
     return false
   })
 })
@@ -29,6 +32,7 @@ var contributionsPerSprint = ''
 var rawReleaseData = []
 var loginDetails = ''
 var releaseInfo = {}
+var branchNames = []
 // fetches the release information from github
 const getReleases = async () => {
   try {
@@ -46,16 +50,17 @@ const getReleases = async () => {
 const dateOfRelease = () => {
   getReleases().then((res) => {
     rawReleaseData = res.rawReleaseInfo
-    console.log(rawReleaseData)
+    // console.log(rawReleaseData)
     getReleaseDates()
     developerContributions()
+  //  cleanBranchInfo()
   })
 }
 
 function plotTimeline () {
   var day = 1000 * 60 * 60 * 24 // this gives a day in milliseconds
   var testData = cleanData()
-
+  var popupTrack = 0
   const width = 1000
   var lastDate = (releaseInfo.expreleaseDates).length - 1
   const SprintLength = releaseInfo.daysElapsed / day
@@ -88,6 +93,10 @@ function plotTimeline () {
         var sprintBarInfo = sprintBarData(getNames(), contributionsPerSprint, i)
         if (sprintBarInfo.length !== 0) {
           sprintBar(sprintBarInfo, relDetails, i)
+          if (popupTrack === 0) {
+            togglePopUp()
+          }
+          popupTrack++
         }
       })
     d3.selectAll('table').remove()
@@ -108,7 +117,7 @@ function getReleaseDates () {
     releaseDay: '',
     releaser: []
   }
-  console.log(rawReleaseData)
+  //  console.log(rawReleaseData)
   var j = 0
   for (var i = rawReleaseData.length - 1; i >= 0; i--) {
     const date = new Date((rawReleaseData[i].published_at).substring(0, 10))
@@ -182,9 +191,9 @@ function getexpReleaseDates () {
 // sends details to the html file
 function releaseDetais (i) {
   const day = 1000 * 60 * 60 * 24
-  console.log(releaseInfo)
+  // console.log(releaseInfo)
   var releaser = (releaseInfo.releaser)[i]
-  var releaseDate = new Date((releaseInfo.actualreleaseDates[i + 1]))
+  var releaseDate = convertTimestamp(releaseInfo.actualreleaseDates[i + 1])
   var SprintLength = (releaseInfo.daysElapsed) / day
 
   const actualDates = releaseInfo.actualreleaseDates
@@ -197,7 +206,7 @@ function releaseDetais (i) {
   var tempDetails = [releaseInfo.releaseTags[i], releaser, releaseDate, SprintLength, clickedSprintLength]
 
   var clickedSprintData = []
-  for (var j = 0; j < 4; j++) {
+  for (var j = 0; j < tempDetails.length; j++) {
     clickedSprintData[j] = {'release Information': temp[j],
       'Details': tempDetails[j]
     }
@@ -278,8 +287,8 @@ function convertTimestamp (timestamp) {
 
 function plotBar (data, names) {
   // console.log(data)
-  console.log(names)
-  console.log(data)
+  // console.log(names)
+//  console.log(data)
   var margin = {top: 80, right: 160, bottom: 100, left: 70}
   var width = 700 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom
@@ -474,12 +483,11 @@ const pullDetails = () => {
       (summary[i]).node_Deletions = nodeDeletion
     }
     contributionsPerSprint = stackeBarData(releaseInfo.actualreleaseDates)
-    console.log(contributionsPerSprint)
   })
+  console.log(summary)
 }
 
 function stackeBarData (releaseDates) {
-  console.log(releaseDates)
   var data = []
   const names = getNames()
   for (var i = 0; i < releaseDates.length - 1; i++) {
@@ -531,7 +539,7 @@ Array.prototype.removeDuplicates = function () {
 // Plots bar graph for each sprint
 function sprintBar (barData, tableData, i) {
   var data = barData
-  console.log(data)
+  // console.log(data)
   var margin = {top: 20, right: 20, bottom: 70, left: 40},
     width = 400 - margin.left - margin.right,
     height = 300 - margin.top - margin.bottom
@@ -641,6 +649,28 @@ function sprintBarData (names, contributions, index) {
   dateOfRelease()
 })()
 
+function togglePopUp () {
+  var popup = document.getElementById('myPopup')
+  popup.classList.toggle('show')
+}
+// Duplicate
+/*
+const getBranchInfo = async () => {
+  const res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/branches?access_token=${userInfo.accessToken}`)
+  const repoBranches = await res.json()
+  return {repoBranches}
+}
+// filters the received data for ploting
+const cleanBranchInfo = () => {
+  getBranchInfo().then((res) => {
+    const branches = res.repoBranches
+    for (var i = 0; i < branches.length; i++) {
+      branchNames.push((branches[i]).name)
+    }
+    console.log(branchNames)
+  })
+}
+*/
 /*
 function makeObjects(){
   var data = []
