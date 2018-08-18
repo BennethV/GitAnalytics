@@ -50,7 +50,6 @@ const getReleases = async () => {
 const dateOfRelease = () => {
   getReleases().then((res) => {
     rawReleaseData = res.rawReleaseInfo
-    // console.log(rawReleaseData)
     getReleaseDates()
     developerContributions()
   //  cleanBranchInfo()
@@ -117,7 +116,7 @@ function getReleaseDates () {
     releaseDay: '',
     releaser: []
   }
-  //  console.log(rawReleaseData)
+
   var j = 0
   for (var i = rawReleaseData.length - 1; i >= 0; i--) {
     const date = new Date((rawReleaseData[i].published_at).substring(0, 10))

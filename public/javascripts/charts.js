@@ -13,6 +13,7 @@ var devReleases = []
 var closedDevReleases = []
 var contributors = []
 var repoList = []
+var branches = []
 var totalCommits = 0
 var userInfo = {};
 
@@ -31,17 +32,27 @@ var userInfo = {};
         // fetches repo list from selected organisation
         res = await fetch(`https://api.github.com/orgs/${userInfo.organisation}/repos?&access_token=${userInfo.accessToken}`)
         repoList = await res.json()
-        // console.log(repoList)
+
         // repository pulls
         var res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/pulls?state=closed&access_token=${userInfo.accessToken}`)
 
         closedPulls = await res.json()
+        console.log(closedPulls)
         res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/contributors?access_token=${userInfo.accessToken}`)
         contributors = await res.json()
         // fetch release information
         res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/releases?access_token=${userInfo.accessToken}`)
         releases = getReleaseDateForPie(await res.json())
+        // fectch branch information
+        res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/branches?access_token=${userInfo.accessToken}`)
+        branches = await res.json()
+        console.log(branches)
+        for (let p = 0; p < branches.length; p++) {
+          var commitData = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/statuses/${branches[p].commit.sha}?access_token=${userInfo.accessToken}`);
+          (branches[p])['commitData'] = await commitData.json()
+        }
 
+        console.log(branches)
         console.log('Started fetching all the information')
         // populate the object that stores the information per developer
         for (var d = contributors.length - 1; d >= 0; d--) {
@@ -503,7 +514,7 @@ function genSummaryTable (data) {
   d3.selectAll('table').remove()
   d3.selectAll('svg').remove()
   // render the tables
-  tabulate(data, ['Pull_Request', 'User', 'Merge_Date', 'Total_Commits', 'Message']) // 2 column table
+  tabulate(data, ['Pull_Request', 'Branch', 'User', 'Merge_Date', 'Total_Commits', 'Message']) // 2 column table
 }
 
 function genReviewTable (data) {
