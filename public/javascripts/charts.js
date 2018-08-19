@@ -32,6 +32,7 @@ var userInfo = {};
         // fetches repo list from selected organisation
         res = await fetch(`https://api.github.com/orgs/${userInfo.organisation}/repos?&access_token=${userInfo.accessToken}`)
         repoList = await res.json()
+
         // repository pulls
         var res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/pulls?state=closed&access_token=${userInfo.accessToken}`)
 
@@ -45,13 +46,15 @@ var userInfo = {};
         // fectch branch information
         res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/branches?access_token=${userInfo.accessToken}`)
         branches = await res.json()
-        console.log(branches)
-        for (let p = 0; p < branches.length; p++) {
-          var commitData = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/statuses/${branches[p].commit.sha}?access_token=${userInfo.accessToken}`);
+        // console.log(branches)
+        /* for (let p = 0; p < branches.length; p++) {
+          var commitData = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/commits?per_page=200&sha=${(branches[p]).commit.sha}&access_token=${userInfo.accessToken}`);
           (branches[p])['commitData'] = await commitData.json()
         }
-
         console.log(branches)
+        */
+
+        // console.log(branches)
         console.log('Started fetching all the information')
         // populate the object that stores the information per developer
         for (var d = contributors.length - 1; d >= 0; d--) {
@@ -168,6 +171,14 @@ $(document).ready(function () {
     document.getElementById('cards').innerHTML = null
 
     document.getElementById('3cards').innerHTML = null
+    var overViewInfo = document.getElementById('overviewLayout-template').innerHTML
+    var template = Handlebars.compile(overViewInfo)
+    var sprintNumber = releaseInfo.actualreleaseDates.length - 1
+    var overviewData = template({
+      title: 'welcome setlaela',
+      NumberOfSprint: sprintNumber
+    })
+    document.getElementById('frontOverview').innerHTML = overviewData
     plotBar(contributionsPerSprint, getNames())
     return false
   })
@@ -197,7 +208,7 @@ $(document).ready(function () {
     var info = template({
       title: 'Pull Request Overview'
     })
-
+    document.getElementById('frontOverview').innerHTML = null
     document.getElementById('3cards').innerHTML = null
     document.getElementById('theading').innerHTML = info
     // update the information cards
@@ -212,7 +223,7 @@ $(document).ready(function () {
       text3: totalCommits,
       card4: 'HAhaha'
     })
-
+    document.getElementById('frontOverview').innerHTML = null
     document.getElementById('3cards').innerHTML = null
     document.getElementById('cards').innerHTML = infoCards
     await genSummaryTable(summary)
@@ -234,7 +245,7 @@ $(document).ready(function () {
       card3: 'Closed Pulls Analytics',
       card4: 'Closed Pulls Analytics'
     })
-
+    document.getElementById('frontOverview').innerHTML = null
     document.getElementById('cards').innerHTML = null
     document.getElementById('3cards').innerHTML = infoCards
     await genReviewTable(pullReview)
@@ -257,6 +268,7 @@ $(document).ready(function () {
       card3: 'Closed Pulls Analytics',
       card4: 'Closed Pulls Analytics'
     })
+    document.getElementById('frontOverview').innerHTML = null
     document.getElementById('cards').innerHTML = null
     document.getElementById('3cards').innerHTML = infoCards
     await genPullCommitsTable(pullCommits)
@@ -281,7 +293,7 @@ $(document).ready(function () {
       card3: 'Review ANalytics',
       card4: 'Review ANalytics'
     })
-
+    document.getElementById('frontOverview').innerHTML = null
     document.getElementById('3cards').innerHTML = null
     document.getElementById('cards').innerHTML = infoCards
 
