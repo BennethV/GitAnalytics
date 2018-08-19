@@ -4,26 +4,27 @@ $(document).ready(function () {
     var template = Handlebars.compile(tableInfor)
     var info = template({
       title: 'Timeline of Sprints'
+
     })
     // document.getElementById('pullReqNo').innerHTML =null;
     document.getElementById('theading').innerHTML = info
     plotTimeline()
-    var cardInfor = document.getElementById('cards_template').innerHTML
+    var cardInfor = document.getElementById('3cards_template').innerHTML
     template = Handlebars.compile(cardInfor)
+    var sprintNumber = releaseInfo.actualreleaseDates.length - 1
     var infoCards = template({
-      card1: 'Updated By james',
-      card2: 'wefeskjv ',
-      card3: 'Updfdlkjgd',
-      card4: 'vekluriCIRT'
-
+      card3: 'Number Of Sprints',
+      text3: sprintNumber,
+      card2: 'Average Sprint Length',
+      text2: sprintNumber,
+      card1: 'Start Date',
+      text1: startDate
     })
     document.getElementById('cards').innerHTML = infoCards
-
+    document.getElementById('frontOverview').innerHTML = null
     document.getElementById('3cards').innerHTML = null
     dateOfRelease()
-
     togglePopUp()
-
     return false
   })
 })
@@ -33,6 +34,9 @@ var rawReleaseData = []
 var loginDetails = ''
 var releaseInfo = {}
 var branchNames = []
+var branchLife = []
+var SprintLength = ''
+var startDate = ''
 // fetches the release information from github
 const getReleases = async () => {
   try {
@@ -131,12 +135,13 @@ function getReleaseDates () {
       releaseInfo.releaseDay = date.getDay()
     }
     if (i === 0 && releaseInfo.daysElapsed !== 0) {
-      var startDate = releaseInfo.actualreleaseDates[0] - releaseInfo.daysElapsed;
+      startDate = releaseInfo.actualreleaseDates[0] - releaseInfo.daysElapsed;
 
       (releaseInfo.actualreleaseDates).unshift(startDate)
     }
     j++
   }
+  startDate = convertTimestamp(startDate)
 }
 
 // gets the difference between two dates
@@ -176,6 +181,7 @@ function cleanData () {
 
 // gives the expected release Dates
 function getexpReleaseDates () {
+  const day = 1000 * 60 * 60 * 24
   // console.log(releaseInfo)
   var daysElapsed = releaseInfo.daysElapsed
 
@@ -186,6 +192,7 @@ function getexpReleaseDates () {
     var nextRelease = daysElapsed
     releaseInfo.expreleaseDates[i] = releaseInfo.expreleaseDates[i - 1] + nextRelease
   }
+  SprintLength = (releaseInfo.daysElapsed) / day
 }
 // sends details to the html file
 function releaseDetais (i) {
@@ -193,7 +200,6 @@ function releaseDetais (i) {
   // console.log(releaseInfo)
   var releaser = (releaseInfo.releaser)[i]
   var releaseDate = convertTimestamp(releaseInfo.actualreleaseDates[i + 1])
-  var SprintLength = (releaseInfo.daysElapsed) / day
 
   const actualDates = releaseInfo.actualreleaseDates
   // convert to integers for comparison
@@ -288,9 +294,9 @@ function plotBar (data, names) {
   // console.log(data)
   // console.log(names)
 //  console.log(data)
-  var margin = {top: 80, right: 160, bottom: 100, left: 70}
-  var width = 700 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom
+  var margin = {top: 80, right: 160, bottom: 90, left: 70}
+  var width = 550 - margin.left - margin.right,
+    height = 350 - margin.top - margin.bottom
   d3.selectAll('table').remove()
   d3.selectAll('svg').remove()
   var svg = d3.select('#barGraph')
@@ -483,7 +489,9 @@ const pullDetails = () => {
     }
     contributionsPerSprint = stackeBarData(releaseInfo.actualreleaseDates)
   })
-  console.log(summary)
+  // console.log(summary)
+  // console.log(branches)
+  // getBranchLife()
 }
 
 function stackeBarData (releaseDates) {
@@ -652,8 +660,39 @@ function togglePopUp () {
   var popup = document.getElementById('myPopup')
   popup.classList.toggle('show')
 }
-// Duplicate
 /*
+function getBranchLife () {
+  for (var i = 0; i < branches.length; i++) {
+    for (var j = 0; j < summary.length; j++) {
+      if ((branches[i]).name === (summary[j]).Branch) {
+        var lastElement = 0
+        if (((branches[i]).commitData.length) !== 0) {
+          lastElement = ((branches[i]).commitData.length) - 1
+        }
+        console.log(lastElement)
+        console.log(((branches[i].commitData[lastElement]).created_at))
+        var commitDate = (new Date(((branches[i].commitData[lastElement]).created_at).substring(0, 10))).getTime()
+        var isShortLived = checkBranchLife(((summary[j]).release_id), commitDate)
+        console.log(isShortLived)
+        console.log(branches[i].commitData)
+        break
+      }
+    }
+  }
+}
+
+function checkBranchLife (releaseId, commitDate) {
+  var prevRelease = parseInt(releaseInfo.actualreleaseDates[releaseId - 1])
+  var convCommitDate = parseInt(commitDate)
+  if (convCommitDate > prevRelease) {
+    return true
+  } else {
+    return false
+  }
+}
+
+// Duplicate
+
 const getBranchInfo = async () => {
   const res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/branches?access_token=${userInfo.accessToken}`)
   const repoBranches = await res.json()
@@ -688,4 +727,6 @@ function isModules (name) {
     return true
   } else { return false }
 }
+Important link
+https://api.github.com/repos/witseie-elen4010/Group-4-Lab/commits?per_page=100&sha=06b15544a5cda4eadb6b7bb79cfd6dd09e520675&access_token=95082475007363f3e3d7a9352b9a408fc934f762
 */
