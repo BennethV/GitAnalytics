@@ -380,7 +380,7 @@ Repository list dropdown button
 }
 
 .Osidenav {
-    height:25%;
+    height:28%;
     width: 220px;
     position: absolute;
     top: 90px;
@@ -390,7 +390,7 @@ Repository list dropdown button
     padding: 8px 0;
 }
 
-.Osidenav a {
+.Osidenav li {
     padding: 6px 8px 6px 16px;
     text-decoration: none;
     font-size: 25px;
@@ -399,7 +399,7 @@ Repository list dropdown button
 }
 
 
-.Osidenav a:hover {
+.Osidenav li:hover {
     color: #064579;
 }
 

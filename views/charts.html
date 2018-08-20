@@ -101,13 +101,13 @@ td, th {
     <p>%</p>
   </div>
 </div>
+
 <div class="Osidenav">
-  <h2>Contributors</h2>
-  <a href="#about">About</a>
-  <a href="#services">Services</a>
-  <a href="#clients">Clients</a>
-  <a href="#contact">Contact</a>
-</div>
+    <h1>Collaborators</h1>
+   {{#each names}}
+    <li >{{this}}</li>
+    {{/each}}
+  </div>
 </div>
 <div class="Orow2">
   <div class="Ocolumn2" style="background-color:#aaa;">
@@ -115,18 +115,13 @@ td, th {
     <div id = "overviewPie" style="display:inline-block"></div>
 
   </div>
-  <div id="barGraph"class="Ocolumn2" style="background-color:#bbb;">
+  <div id="stacked1"class="Ocolumn2" style="background-color:#bbb;">
       <h2>Column 1</h2>
   </div>
 </div>
 
 
 
-<div class="Osidenav">
- {{#each names}}
-  <a href="#{{this}}" >{{this}}</a>
-  {{/each}}
-</div>
 
 </script>
     <!--  code from James-->
