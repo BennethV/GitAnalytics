@@ -82,7 +82,7 @@ router.get('/charts/:id', function (req, res, next) {
     if (err) throw err
     console.log(err)
   })
-  res.sendFile(path.join(__dirname, '../views', 'charts.html'))
+  res.redirect('/charts')
 })
 
 module.exports = router

@@ -47,6 +47,19 @@ td, th {
     
 
 <!--  code from James-->
+<div id="quoteData"></div>
+<script id="quote-template" type="text/x-handlebars-template">
+  <div class="repodropdown"  style="float:right">
+      <button class="repodropbtn" >Dropdown</button>
+      <div class="repodropdown-content">
+        {{#each repos}}
+        <a>{{repo}}</a>
+        {{/each}}
+      </div>
+    </div>
+  
+ 
+</script>
 
 
 
@@ -58,7 +71,7 @@ td, th {
       <script id= "table_heading_template" type="text/x-handlebars-template">
         <h1 >{{title}}</h1>
       </script>
-      <script id = "cards_template" >
+      <script id = "cards_template" type="text/x-handlebars-template" >
         <div class="row2" >
 
           <div class="column2" style="background-color:black;">
@@ -80,7 +93,7 @@ td, th {
         
         </div>
       </script>
-      <script id = "3cards_template" >
+      <script id = "3cards_template" type="text/x-handlebars-template">
         <div class="row3" >
 
           <div class="column3" style="background-color:black;">
@@ -175,11 +188,6 @@ td, th {
 
 
        <div id="info"></div>
-       <div id="quoteData"></div>
-      <script id="quote-template" type="text/x-handlebars-template">
-
-
-      </script>
 
       <script>
 /* Loop through all dropdown buttons to toggle between hiding and showing its dropdown content - This allows the user to have multiple dropdowns without any conflict */
