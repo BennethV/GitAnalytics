@@ -174,12 +174,15 @@ $(document).ready(function () {
     var overViewInfo = document.getElementById('overviewLayout-template').innerHTML
     var template = Handlebars.compile(overViewInfo)
     var sprintNumber = releaseInfo.actualreleaseDates.length - 1
+    var names = getNames()
     var overviewData = template({
       title: 'welcome setlaela',
-      NumberOfSprint: sprintNumber
+      NumberOfSprint: sprintNumber,
+      names: names
+
     })
     document.getElementById('frontOverview').innerHTML = overviewData
-    plotBar(contributionsPerSprint, getNames())
+    stackedBarOverview(contributionsPerSprint, getNames())
     return false
   })
   $('#sprintsss').click(function () {

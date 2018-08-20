@@ -113,8 +113,18 @@
 }
 .column {
     flex: 50%;
+    float: left;
     padding: 10px;
     
+}
+.barColumn{
+    float: left;
+    width: 40%;
+    padding: 5px;
+}
+.barRow{
+    clear: both
+    display: flex;
 }
 
 /* card stuffies
@@ -340,5 +350,14 @@
     font-size: 12px; /* Increased text to enable scrolling */
 }
 
-
-    
+.button {
+    background-color: #4CAF50; /* Green */
+    border-color: black;
+    color: white;
+    text-align: center;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+}
+.button3 {padding: 14px 40px;}
