@@ -60,8 +60,63 @@ td, th {
   
  
 </script>
+<div id="frontOverview"></div>
+ <script id = "overviewLayout-template">
+
+<div class="Orow3">
+  <div class="Ocolumn3" style="background-color:#aaa;">
+    <h2>{{title}}</h2>
+    <p>Some text..</p>
+  </div>
+  <div class="Ocolumn4" style="background-color:#bbb;">
+    <p>click to choose Repos</p>
+    <p>logout</p>
+  </div>
+</div>
+
+<div class="main2">
+<div class="Orow1">
+  <div class="Ocolumn1" style="background-color:#aaa;">
+    <h2>Total Sprints</h2>
+    <p>{{NumberOfSprint}}</p>
+  </div>
+  <div class="Ocolumn1" style="background-color:#bbb;">
+    <h2>Total Commits</h2>
+    <p>Some text..</p>
+  </div>
+  <div class="Ocolumn1" style="background-color:#ccc;">
+    <h2>Main Language</h2>
+    <p>Some text..</p>
+  </div>
+</div>
+<div class="Orow2">
+  <div class="Ocolumn5" style="background-color:#aaa;">
+    <h2>Build Status of Master</h2>
+    <p>Some text..</p>
+  </div>
+  <div class="Ocolumn5" style="background-color:#bbb;">
+    <h2>TSB</h2>
+    <p>Some text..</p>
+  </div>
+</div>
+</div>
+<div class="Orow2">
+  <div class="Ocolumn2" style="background-color:#aaa;">
+    <h2>Column 1</h2>
+    <p>Some text..</p>
+  </div>
+  <div id="barGraph"class="Ocolumn2" style="background-color:#bbb;">
+  </div>
+</div>
 
 
+<div class="Osidenav">
+  <a href="#about">About</a>
+  <a href="#services">Services</a>
+  <a href="#clients">Clients</a>
+  <a href="#contact">Contact</a>
+</div>
+</script>
 
     <!--  code from James-->
 
@@ -114,9 +169,7 @@ td, th {
            <div>
        <div id="timeline1"></div>
         <div>
-          </div>
-            <div align="center" id="barGraph"></div>
-          <div>
+
        </div>
        </div>
             <div align="centre" id="#sprintBarGraph"></div>
@@ -172,20 +225,9 @@ td, th {
         </div>               
       </div>
 
- 
-
-         <div>
-            <div id="clickedBar"></div>
-            <div id="releaser"></div>
-            <div id="date"></div>
-            <div id="SprintLength"></div>
-            <div id="clickedSprintLength"></div>
-            <div id="james"></div>
-          </div>
-      </div>
-
-      
-
+<div class="popup" >
+  <span class="popuptext" id="myPopup">Click the timeline bars for more details</span>
+</div>
 
        <div id="info"></div>
 
