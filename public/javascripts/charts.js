@@ -235,6 +235,7 @@ $(document).ready(function () {
     var overViewInfo = document.getElementById('overviewLayout-template').innerHTML
     var template = Handlebars.compile(overViewInfo)
     var sprintNumber = releaseInfo.actualreleaseDates.length - 1
+    var names = getNames()
     var overviewData = template({
       title: 'welcome to ' + userInfo.repository + ' Repository Statistics',
       NumberOfSprint: sprintNumber,

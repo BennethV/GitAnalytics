@@ -50,6 +50,7 @@ td, th {
       <!-- It is better to separate your template from the JS and you do that by placing the template in its own tag -->
     
 
+
 <!--  code from James-->
 
 <div id="frontOverview"></div>
@@ -120,6 +121,13 @@ td, th {
 </div>
 
 
+
+<div class="Osidenav">
+ {{#each names}}
+  <a href="#{{this}}" >{{this}}</a>
+  {{/each}}
+</div>
+
 </script>
     <!--  code from James-->
 
@@ -172,10 +180,13 @@ td, th {
            <div>
        <div id="timeline1"></div>
         <div>
+          <div>
+          <div id = "stacked1"></div>
+        </div>   
 
        </div>
        </div>
-            <div align="centre" id="#sprintBarGraph"></div>
+            <div align="centre" id="sprintBarGraph"></div>
           <div>
 
       <div id="summary"></div>
@@ -193,42 +204,10 @@ td, th {
         <div>
           <div class = "column" id = "closedPullsPerDevTable"></div>
         </div>               
-      </div>
-      <div class = "row">
-        <div>
-          <div class = "column" id = "sprintBarGraph1" style = ></div>
-        </div>
-        <div>
-          <div class = "column" id = "releaseDetailsTable1"></div>
-        </div>
-        </div>
-        <div class = "row">
-        <div>
-          <div class = "column" id = "sprintBarGraph2" style = ></div>
-        </div>
-        <div>
-          <div class = "column" id = "releaseDetailsTable2"></div>
-        </div>               
+      </div>            
       </div>
 
-      <div class = "row">
-        <div>
-          <div class = "column" id = "sprintBarGraph3" style = ></div>
-        </div>
-        <div>
-          <div class = "column" id = "releaseDetailsTable3"></div>
-        </div>               
-      </div>
-
- <div class = "row">
-        <div>
-          <div class = "column" id = "sprintBarGraph4" style = ></div>
-        </div>
-        <div>
-          <div class = "column" id = "releaseDetailsTable4"></div>
-        </div>               
-      </div>
-
+      
 <div class="popup" >
   <span class="popuptext" id="myPopup">Click the timeline bars for more details</span>
 </div>

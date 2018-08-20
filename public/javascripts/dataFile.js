@@ -8,7 +8,11 @@ $(document).ready(function () {
     })
     // document.getElementById('pullReqNo').innerHTML =null;
     document.getElementById('theading').innerHTML = info
+    d3.selectAll('table').remove()
+    d3.selectAll('svg').remove()
     plotTimeline()
+
+    plotBar(contributionsPerSprint, getNames())
     var cardInfor = document.getElementById('3cards_template').innerHTML
     template = Handlebars.compile(cardInfor)
     var sprintNumber = releaseInfo.actualreleaseDates.length - 1
@@ -23,10 +27,13 @@ $(document).ready(function () {
     document.getElementById('cards').innerHTML = infoCards
     document.getElementById('frontOverview').innerHTML = null
     document.getElementById('3cards').innerHTML = null
+
     document.getElementById('body').style.backgroundColor = 'white'
-    document.getElementById('quoteData').innerHTML = null
+
     dateOfRelease()
+
     togglePopUp()
+
     return false
   })
 })
@@ -39,6 +46,7 @@ var branchNames = []
 var branchLife = []
 var SprintLength = ''
 var startDate = ''
+var graphState = []
 // fetches the release information from github
 const getReleases = async () => {
   try {
@@ -57,7 +65,6 @@ const dateOfRelease = () => {
   getReleases().then((res) => {
     rawReleaseData = res.rawReleaseInfo
     getReleaseDates()
-    developerContributions()
   //  cleanBranchInfo()
   })
 }
@@ -80,7 +87,7 @@ function plotTimeline () {
 
   function timelineRect () {
     var chart = d3.timeline()
-      // d3.select('#timeline1').remove()
+      //
       .beginning(releaseInfo.actualreleaseDates[0]) // we can optionally add beginning and ending times to speed up rendering a little
       .ending(endDay)
       .showTimeAxisTick() // toggles tick marks
@@ -95,21 +102,33 @@ function plotTimeline () {
       .margin({left: 70, right: 30, top: 0, bottom: 0})
       .click(function (d, i, datum) {
         const relDetails = releaseDetais(i)
-        var sprintBarInfo = sprintBarData(getNames(), contributionsPerSprint, i)
-        if (sprintBarInfo.length !== 0) {
+
+        // verifies that the graph has not been ploted
+        var devNames = getNames()
+        var sprintBarInfo = sprintBarData(devNames, contributionsPerSprint, i)
+
+        if ((sprintBarInfo.length !== 0)) {
           sprintBar(sprintBarInfo, relDetails, i)
+          var num = releaseInfo.actualreleaseDates.length - 1
+          for (var j = 0; j < num; j++) {
+            if (i == j) {
+              $('.timelineSeries_' + j).css('fill', 'blue')
+            } else {
+              $('.timelineSeries_' + j).css('fill', 'green')
+            }
+          }
+
           if (popupTrack === 0) {
             togglePopUp()
           }
           popupTrack++
         }
       })
-    d3.selectAll('table').remove()
-    d3.selectAll('svg').remove()
-
     var svg = d3.select('#timeline1').append('svg').attr('width', 1000).datum(testData).call(chart)
   }
   timelineRect()
+  console.log(contributionsPerSprint)
+  console.log(getNames())
 }
 // gets the release dates and stores them
 function getReleaseDates () {
@@ -299,6 +318,162 @@ function plotBar (data, names) {
   var margin = {top: 80, right: 160, bottom: 90, left: 70}
   var width = 550 - margin.left - margin.right,
     height = 350 - margin.top - margin.bottom
+
+
+  var iDiv = document.createElement('div')
+  iDiv.className = 'main'
+  iDiv.id = 'stacked1'
+  document.getElementsByTagName('body')[0].appendChild(iDiv)
+
+  var svg = d3.select('#stacked1')
+    .append('svg')
+    .attr('width', width + margin.left + margin.right)
+    .attr('height', height + margin.top + margin.bottom)
+    .append('g')
+    .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+
+  /* Data in strings like it would be if imported from a csv */
+  var parse = d3.time.format('%Y-%m-%d').parse
+  // Transpose the data into layers
+  var dataset = d3.layout.stack()(names.map(function (developer) {
+    return data.map(function (d) {
+      return {x: parse(d.year), y: +d[developer]}
+    })
+  }))
+
+  // Set x, y and colors
+  var x = d3.scale.ordinal()
+    .domain(dataset[0].map(function (d) { return d.x }))
+    .rangeRoundBands([10, width - 10], 0.02)
+
+  var y = d3.scale.linear()
+    .domain([0, d3.max(dataset, function (d) { return d3.max(d, function (d) { return d.y0 + d.y }) })])
+    .range([height, 0])
+
+  var colors = colorFunction()
+
+  // var colors = ['b33040', '#d25c4d', '#f2b447', '#d9d574']
+
+  // Define and draw axes
+  var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient('left')
+    .ticks(10)
+    .tickSize(-width, 0, 0)
+    .tickFormat(function (d) { return d })
+
+  var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient('bottom')
+    .tickFormat(d3.time.format('%Y-%m-%d'))
+
+  svg.append('g')
+    .attr('class', 'y axis')
+    .call(yAxis)
+
+  svg.append('g')
+    .attr('class', 'x axis')
+    .attr('transform', 'translate(0,' + height + ')')
+    .call(xAxis)
+
+  // Create groups for each series, rects for each segment
+  var groups = svg.selectAll('g.cost')
+    .data(dataset)
+    .enter().append('g')
+    .attr('class', 'cost')
+    .style('fill', function (d, i) { return colors[i] })
+
+  var rect = groups.selectAll('rect')
+    .data(function (d) { return d })
+    .enter()
+    .append('rect')
+    .attr('x', function (d) { return x(d.x) })
+    .attr('y', function (d) {
+      return y(d.y0 + d.y)
+    })
+    .attr('height', function (d) { return y(d.y0) - y(d.y0 + d.y) })
+    .attr('width', x.rangeBand())
+    .on('mouseover', function () { tooltip.style('display', null) })
+    .on('mouseout', function () { tooltip.style('display', 'none') })
+    .on('mousemove', function (d) {
+      var xPosition = d3.mouse(this)[0] - 15
+      var yPosition = d3.mouse(this)[1] - 25
+      tooltip.attr('transform', 'translate(' + xPosition + ',' + yPosition + ')')
+      tooltip.select('text').text(d.y)
+    })
+
+  // Draw legend
+  var legend = svg.selectAll('.legend')
+    .data(names)
+    .enter().append('g')
+    .attr('class', 'legend')
+    .attr('transform', function (d, i) { return 'translate(30,' + i * 19 + ')' })
+
+  legend.append('rect')
+    .attr('x', width - 18)
+    .attr('width', 18)
+    .attr('height', 18)
+    .style('fill', function (d, i) { return colors.slice()[i] })
+
+  legend.append('text')
+    .attr('x', width + 5)
+    .attr('y', 9)
+    .attr('dy', '.35em')
+    .style('text-anchor', 'start')
+    .text(function (d, i) {
+      return names[i]
+    })
+
+  // Prep the tooltip bits, initial display is hidden
+  var tooltip = svg.append('g')
+    .attr('class', 'tooltip')
+    .style('display', 'none')
+
+  tooltip.append('rect')
+    .attr('width', 30)
+    .attr('height', 20)
+    .attr('fill', 'white')
+    .style('opacity', 0.5)
+
+  tooltip.append('text')
+    .attr('x', 15)
+    .attr('dy', '1.2em')
+    .style('text-anchor', 'middle')
+    .attr('font-size', '12px')
+    .attr('font-weight', 'bold')
+
+  svg.append('text')
+    .attr('transform', 'rotate(-90)')
+    .attr('y', 0 - margin.left)
+    .attr('x', 0 - (height / 2))
+    .attr('dy', '1em')
+    .style('text-anchor', 'middle')
+    .text('Number of lines added')
+    // text label for the x axis
+  svg.append('text')
+    .attr('transform', 'translate(' + (width / 2) + ' ,' + (height + margin.top + 20) + ')')
+    .style('text-anchor', 'middle')
+    .text('Release Dates')
+  svg.append('text')
+    .attr('x', (width / 2))
+    .attr('y', 0 - (margin.top / 2))
+    .attr('text-anchor', 'middle')
+    .style('font-size', '20px')
+    .style('text-decoration', 'underline')
+    .text('Number of line of code added vs release dates')
+}
+
+// ploting for the overview page
+function stackedBarOverview (data, names) {
+  // console.log(data)
+  // console.log(names)
+//  console.log(data)
+  d3.selectAll('table').remove()
+  d3.selectAll('svg').remove()
+  var margin = {top: 80, right: 160, bottom: 90, left: 70}
+  var width = 550 - margin.left - margin.right,
+    height = 350 - margin.top - margin.bottom
+
 
   var svg = d3.select('#barGraph')
     .append('svg')
@@ -550,9 +725,37 @@ Array.prototype.removeDuplicates = function () {
 // Plots bar graph for each sprint
 function sprintBar (barData, tableData, i) {
   var data = barData
+  d3.select('#individualTable').remove()
+  d3.select('#individualBar').remove()
+  d3.select('#stacked1').remove()
+  // justTesting
+  // class = "column"
   // console.log(data)
-  var margin = {top: 20, right: 20, bottom: 70, left: 40},
-    width = 400 - margin.left - margin.right,
+  var barId = 'individualBar'
+  var tableId = 'individualTable'
+  var iDiv = document.createElement('div')
+  iDiv.className = 'main'
+  var innerDiv = document.createElement('div')
+  innerDiv.className = 'row'
+
+  var barDiv = document.createElement('div')
+  barDiv.className = 'column'
+  barDiv.id = barId
+  var list = document.getElementById('myList')
+  // creating a div for the table
+
+  var tableDiv = document.createElement('div')
+  tableDiv.className = 'column'
+  tableDiv.id = tableId
+
+  innerDiv.appendChild(barDiv)
+  innerDiv.appendChild(tableDiv)
+
+  iDiv.appendChild(innerDiv)
+  document.getElementsByTagName('body')[0].appendChild(iDiv)
+
+  var margin = {top: 20, right: 20, bottom: 70, left: 70},
+    width = 600 - margin.left - margin.right,
     height = 300 - margin.top - margin.bottom
 
   // set the ranges
@@ -571,35 +774,13 @@ function sprintBar (barData, tableData, i) {
     .ticks(10)
 
   // add the SVG element
-  if (i === 0) {
-    var svg = d3.select('#sprintBarGraph1').append('svg')
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
-      .append('g')
-      .attr('transform',
-        'translate(' + margin.left + ',' + margin.top + ')')
-  } else if (i === 1) {
-    var svg = d3.select('#sprintBarGraph2').append('svg')
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
-      .append('g')
-      .attr('transform',
-        'translate(' + margin.left + ',' + margin.top + ')')
-  } else if (i === 2) {
-    var svg = d3.select('#sprintBarGraph3').append('svg')
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
-      .append('g')
-      .attr('transform',
-        'translate(' + margin.left + ',' + margin.top + ')')
-  } else if (i === 3) {
-    var svg = d3.select('#sprintBarGraph4').append('svg')
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
-      .append('g')
-      .attr('transform',
-        'translate(' + margin.left + ',' + margin.top + ')')
-  }
+
+  var svg = d3.select('#individualBar').append('svg')
+    .attr('width', width + margin.left + margin.right)
+    .attr('height', height + margin.top + margin.bottom)
+    .append('g')
+    .attr('transform',
+      'translate(' + margin.left + ',' + margin.top + ')')
   // scale the range of the data
   x.domain(data.map(function (d) { return d.Letter }))
   y.domain([0, d3.max(data, function (d) { return d.Freq })])
@@ -613,28 +794,20 @@ function sprintBar (barData, tableData, i) {
     .style('text-anchor', 'end')
     .attr('dx', '-.8em')
     .attr('dy', '-.55em')
-    .attr('transform', 'rotate(-90)')
+    .attr('transform', 'rotate(-45)')
 
   svg.append('g')
     .attr('class', 'y axis')
     .call(yAxis)
     .append('text')
     .attr('transform', 'rotate(-90)')
-    .attr('y', 5)
-    .attr('dy', '.71em')
+    .attr('y', 0 - 50)
+    .attr('x', 0 - (height / 2))
+    .attr('dy', '1em')
     .style('text-anchor', 'end')
-    .text('Lines of Code')
   //   tabulate()
   // Add bar chart
-  if (i === 0) {
-    tabulate(tableData.data, tableData.columns, div = '#releaseDetailsTable1')
-  } else if (i === 1) {
-    tabulate(tableData.data, tableData.columns, div = '#releaseDetailsTable2')
-  } else if (i === 2) {
-    tabulate(tableData.data, tableData.columns, div = '#releaseDetailsTable3')
-  } else if (i === 3) {
-    tabulate(tableData.data, tableData.columns, div = '#releaseDetailsTable4')
-  }
+
   svg.selectAll('bar')
     .data(data)
     .enter().append('rect')
@@ -643,6 +816,28 @@ function sprintBar (barData, tableData, i) {
     .attr('width', x.rangeBand())
     .attr('y', function (d) { return y(d.Freq) })
     .attr('height', function (d) { return height - y(d.Freq) })
+
+  svg.append('text')
+    .attr('transform', 'rotate(-90)')
+    .attr('y', 0 - 60)
+    .attr('x', 0 - (height / 2))
+    .attr('dy', '1em')
+    .style('text-anchor', 'middle')
+    .text('Number of lines added')
+    // text label for the x axis
+  svg.append('text')
+    .attr('transform', 'translate(' + (width / 2) + ' ,' + (height + 40 + 20) + ')')
+    .style('text-anchor', 'middle')
+    .text('Release Dates')
+  svg.append('text')
+    .attr('x', (width / 2))
+    .attr('y', 0 - (10 / 2))
+    .attr('text-anchor', 'middle')
+    .style('font-size', '20px')
+    .style('text-decoration', 'underline')
+    .text('Number of line of code added vs release dates')
+  d3.selectAll('table').remove()
+  tabulate(tableData.data, tableData.columns, div = tableDiv)
 }
 
 function sprintBarData (names, contributions, index) {
@@ -664,6 +859,7 @@ function togglePopUp () {
   var popup = document.getElementById('myPopup')
   popup.classList.toggle('show')
 }
+
 /*
 function getBranchLife () {
   for (var i = 0; i < branches.length; i++) {
