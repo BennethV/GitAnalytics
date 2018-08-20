@@ -6,16 +6,16 @@ var fetch = require('node-fetch')
 var fs = require('fs')
 /* GET home page. */
 router.get('/', function (req, res, next) {
-  var reset = {
-    'accessToken': '',
-    'username': '',
-    'organisation': '',
-    'repository': ''
-  }
-  fs.writeFile(__dirname + '\\..\\public\\javascripts\\data.json', JSON.stringify(reset), function (err) {
-    if (err) throw err
-    console.log(err)
-  })
+  // var reset = {
+  //   'accessToken': '',
+  //   'username': '',
+  //   'organisation': '',
+  //   'repository': ''
+  // }
+  // fs.writeFile(__dirname + '\\..\\public\\javascripts\\data.json', JSON.stringify(reset), function (err) {
+  //   if (err) throw err
+  //   console.log(err)
+  // })
   res.render('index')
 })
 
