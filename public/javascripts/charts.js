@@ -16,10 +16,14 @@ var repoList = []
 var totalHealthyBuilds = 0
 var branches = []
 var totalCommits = 0
-var statusOnMaster = ''
+var statusOnMaster = 'SUCCESS'
+var acquiredData = false
 var userInfo = {};
 
 (async function () {
+  // show loading gif when starting to acquire data
+  // document.getElementById('loader').style.display = 'block'
+
   var rep = await urlParam('repository')
   console.log(urlParam('repository'))
   await fetch('http://127.0.0.1:3000/javascripts/data.json')
@@ -190,11 +194,14 @@ var userInfo = {};
         }
 
         // generate release id and developer pull request per release
-        mergedPullPerDev()
+        await mergedPullPerDev()
         // this function plots the bar graphs under sprints
-        pullDetails()
+        await pullDetails()
         console.log('Done fetching all the information')
+        acquiredData = true
       } catch (err) { console.log(err) }
+      document.getElementById('loader').style.display = 'none'
+      $('#overview').trigger('click')
     })
   return false
 })()
@@ -208,66 +215,50 @@ function urlParam (name) {
 
 // href functions
 $(document).ready(function () {
-  $('#quoteData').on('click', 'a', function () {
+  $('#frontOverview').on('click', 'a', function () {
     console.log($(this).text())
     userInfo.repository = $(this).text()
     window.location.href = `/charts?repository=${userInfo.repository}`
     return false
   })
+  $('body').on('click', '#logout', function () {
+    window.location.href = `/`
+    return false
+  })
+
   $('#overview').click(function () {
+    document.getElementById('body').style.backgroundColor = 'grey'
+
     document.getElementById('cards').innerHTML = null
-
+    document.getElementById('theading').innerHTML = null
     document.getElementById('3cards').innerHTML = null
-
-    console.log(repoList)
-    var quoteInfo = document.getElementById('quote-template').innerHTML
-
-    var template = Handlebars.compile(quoteInfo)
-    // 2b. Passing the array data
-    var quoteData = template({
-      repos: repoList
-    })
-    // end of handlebar code
-    document.getElementById('quoteData').innerHTML = quoteData
-
     var overViewInfo = document.getElementById('overviewLayout-template').innerHTML
     var template = Handlebars.compile(overViewInfo)
     var sprintNumber = releaseInfo.actualreleaseDates.length - 1
     var overviewData = template({
-      title: 'welcome setlaela',
-      NumberOfSprint: sprintNumber
+      title: 'welcome to ' + userInfo.repository + ' Repository Statistics',
+      NumberOfSprint: sprintNumber,
+      totalCommits: totalCommits,
+      repos: repoList,
+      statusOnMaster: statusOnMaster
     })
     document.getElementById('frontOverview').innerHTML = overviewData
+    d3.selectAll('table').remove()
+    d3.selectAll('svg').remove()
     plotBar(contributionsPerSprint, getNames())
-    return false
-  })
-  $('#sprintsss').click(function () {
-  // handlebar code
-    var quoteInfo = document.getElementById('quote-template').innerHTML
-
-    var template = Handlebars.compile(quoteInfo)
-    // 2b. Passing the array data
-    var quoteData = template({
-      name: 'Sprints',
-      quotes: [
-        {quote: "If you don't know where you are going, you might wind up someplace else."},
-        {quote: "You better cut the pizza in four pieces because I'm not hungry enough to eat six."},
-        {quote: 'I never said most of the things I said.'},
-        {quote: "Nobody goes there anymore because it's too crowded."}
-      ]
-    })
-    // end of handlebar code
-    document.getElementById('quoteData').innerHTML = quoteData
+    overviewPie()
     return false
   })
 
   $('#pullOverview').click(async function () {
+    document.getElementById('body').style.backgroundColor = 'white'
     var tableInfor = document.getElementById('table_heading_template').innerHTML
     var template = Handlebars.compile(tableInfor)
     var info = template({
       title: 'Pull Request Overview'
     })
     document.getElementById('frontOverview').innerHTML = null
+
     document.getElementById('3cards').innerHTML = null
     document.getElementById('theading').innerHTML = info
     // update the information cards
@@ -290,6 +281,7 @@ $(document).ready(function () {
     return false
   })
   $('#pullreview').click(async function () {
+    document.getElementById('body').style.backgroundColor = 'white'
     var tableInfor = document.getElementById('table_heading_template').innerHTML
     var template = Handlebars.compile(tableInfor)
     var info = template({
@@ -307,6 +299,7 @@ $(document).ready(function () {
     })
     document.getElementById('frontOverview').innerHTML = null
     document.getElementById('cards').innerHTML = null
+
     document.getElementById('3cards').innerHTML = infoCards
     console.log(pullReview)
     await genReviewTable(pullReview)
@@ -314,6 +307,7 @@ $(document).ready(function () {
     return false
   })
   $('#pullCommits').click(async function () {
+    document.getElementById('body').style.backgroundColor = 'white'
     var tableInfor = document.getElementById('table_heading_template').innerHTML
     var template = Handlebars.compile(tableInfor)
     var info = template({
@@ -331,11 +325,13 @@ $(document).ready(function () {
     })
     document.getElementById('frontOverview').innerHTML = null
     document.getElementById('cards').innerHTML = null
+
     document.getElementById('3cards').innerHTML = infoCards
     await genPullCommitsTable(pullCommits)
     return false
   })
   $('#pullReqNo').on('click', '#pullOption', function () {
+    document.getElementById('body').style.backgroundColor = 'white'
     var self = $(this).closest('option')
     var selected = self.find('id').text()
   })
@@ -354,6 +350,7 @@ $(document).ready(function () {
       card3: 'Review ANalytics',
       card4: 'Review ANalytics'
     })
+    document.getElementById('body').style.backgroundColor = 'white'
     document.getElementById('frontOverview').innerHTML = null
     document.getElementById('3cards').innerHTML = null
     document.getElementById('cards').innerHTML = infoCards
@@ -391,7 +388,73 @@ $(document).ready(function () {
     return false
   })
 })
+function overviewPie () {
+  var data = contributorMergedPullReq
+  var div = '#overviewPie'
+  var pie = d3.layout.pie()
+    .value(function (d) { return d.pulls })
+    .sort(null)
 
+  var w = 300
+  var h = 300
+
+  var outerRadius = (w - 2) / 2
+
+  var color = d3.scale.category10()
+  // .range(['#4daf4a','#377eb8','#ff7f00','#984ea3','#e41a1c']);
+
+  var arc = d3.svg.arc()
+    .innerRadius(0)
+    .outerRadius(outerRadius)
+
+  var svg = d3.select(div)
+    .append('svg')
+    .attr({
+      width: w,
+      height: h,
+      class: 'shadow'
+    }).append('g')
+    .attr({
+      transform: 'translate(' + w / 2 + ',' + h / 2 + ')'
+    })
+  var path = svg.selectAll('path')
+    .data(pie(data))
+    .enter()
+    .append('path')
+    .attr({
+      d: arc,
+      fill: function (d, i) {
+        return color(i)
+      }
+    })
+    .style({
+      'fill-opacity': 0.15,
+      stroke: function (d, i) {
+        return color(i)
+      },
+      'stroke-width': '2px'
+    })
+
+  var text = svg.selectAll('text')
+    .data(pie(data))
+    .enter()
+    .append('text')
+    .attr('transform', function (d) {
+      return 'translate(' + arc.centroid(d) + ')'
+    })
+
+    .attr('text-anchor', 'middle')
+    .text(function (d) {
+      return d.data.name + ' (' + d.data.pulls + ')'
+    })
+    .style({
+      fill: function (d, i) {
+        return color(i)
+      },
+      'font-size': '18px'
+
+    })
+}
 function contributionsPerDevPerRelease (array) {
   var data = []
   var z = 0
@@ -540,6 +603,7 @@ function genPieChart (pieData, tableData) {
     .attr({
       transform: 'translate(' + w / 2 + ',' + h / 2 + ')'
     })
+
   var path = svg.selectAll('path')
     .data(pie(data))
     .enter()
@@ -579,7 +643,6 @@ function genPieChart (pieData, tableData) {
     })
 
     // gen table
-
   tabulate(tableData.data, tableData.column, tableData.div)
 }
 function genSummaryTable (data) {

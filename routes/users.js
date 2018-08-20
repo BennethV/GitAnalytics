@@ -49,7 +49,7 @@ router.post('/', function (req, res, next) {
               }
             })
         })
-      res.render('index', {orgNames: orgNames})
+      res.render('organisation', {orgNames: orgNames})
     } catch (err) { console.log(err) }
   })()
 })
@@ -72,7 +72,7 @@ router.get('/orgDetails/:id', function (req, res, next) {
           repoNames[i] = repoList[i].name
         }
       })
-    await res.render('index', {repoNames: repoNames})
+    await res.render('organisation', {repoNames: repoNames})
   })()
 })
 

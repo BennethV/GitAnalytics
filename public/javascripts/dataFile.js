@@ -23,13 +23,15 @@ $(document).ready(function () {
     document.getElementById('cards').innerHTML = infoCards
     document.getElementById('frontOverview').innerHTML = null
     document.getElementById('3cards').innerHTML = null
+    document.getElementById('body').style.backgroundColor = 'white'
+    document.getElementById('quoteData').innerHTML = null
     dateOfRelease()
     togglePopUp()
     return false
   })
 })
 // declaring all variables that needs to be updated
-var contributionsPerSprint = ''
+var contributionsPerSprint = []
 var rawReleaseData = []
 var loginDetails = ''
 var releaseInfo = {}
@@ -297,8 +299,7 @@ function plotBar (data, names) {
   var margin = {top: 80, right: 160, bottom: 90, left: 70}
   var width = 550 - margin.left - margin.right,
     height = 350 - margin.top - margin.bottom
-  d3.selectAll('table').remove()
-  d3.selectAll('svg').remove()
+
   var svg = d3.select('#barGraph')
     .append('svg')
     .attr('width', width + margin.left + margin.right)
@@ -462,8 +463,8 @@ const getlinesPerPull = async () => {
   return {pullInfo}
 }
 
-const pullDetails = () => {
-  getlinesPerPull().then((res) => {
+async function pullDetails () {
+  await getlinesPerPull().then((res) => {
     const pullInfo = res.pullInfo
 
     for (var i = 0; i < pullInfo.length; i++) {
@@ -487,7 +488,9 @@ const pullDetails = () => {
       (summary[i]).node_Additions = nodeAdds;
       (summary[i]).node_Deletions = nodeDeletion
     }
+
     contributionsPerSprint = stackeBarData(releaseInfo.actualreleaseDates)
+
   })
   // console.log(summary)
   // console.log(branches)
@@ -515,6 +518,7 @@ function stackeBarData (releaseDates) {
     (data[((summary[i]).release_id - 1)])['year'] = convertTimestamp(yr)
   }
   // console.log(data)
+  console.log('I am here')
   return data
 }
 
