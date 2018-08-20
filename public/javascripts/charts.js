@@ -1,4 +1,3 @@
-
 var pullCommits = []
 var commits = []
 var reviews = []
@@ -12,49 +11,69 @@ var closedPulls = []
 var devReleases = []
 var closedDevReleases = []
 var contributors = []
+var repos = []
 var repoList = []
+var totalHealthyBuilds = 0
 var branches = []
 var totalCommits = 0
+var statusOnMaster = 'SUCCESS'
+var acquiredData = false
 var userInfo = {};
 
 (async function () {
+  // show loading gif when starting to acquire data
+  // document.getElementById('loader').style.display = 'block'
+
+  var rep = await urlParam('repository')
+  console.log(urlParam('repository'))
   await fetch('http://127.0.0.1:3000/javascripts/data.json')
     .then((res) => res.text())
     .then(async function (data) {
-      userInfo = JSON.parse(data)
+      userInfo = await JSON.parse(data)
+      if (rep) {
+        userInfo.repository = rep
+
+        console.log('New Repo: ' + rep)
+      }
       console.log(userInfo)
       try {
-        // User's details
         var count = 0
+        // User's details
         var res = await fetch(`https://api.github.com/user?access_token=${userInfo.accessToken}`)
         const userName = await res.json()
         userInfo.username = userName.login
         // fetches repo list from selected organisation
         res = await fetch(`https://api.github.com/orgs/${userInfo.organisation}/repos?&access_token=${userInfo.accessToken}`)
-        repoList = await res.json()
-
+        repos = await res.json()
         // repository pulls
-        var res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/pulls?state=closed&access_token=${userInfo.accessToken}`)
+        res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/pulls?state=closed&access_token=${userInfo.accessToken}`)
 
         closedPulls = await res.json()
-        console.log(closedPulls)
         res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/contributors?access_token=${userInfo.accessToken}`)
         contributors = await res.json()
         // fetch release information
         res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/releases?access_token=${userInfo.accessToken}`)
         releases = getReleaseDateForPie(await res.json())
+        // Fetch all the commits of the repo
+        res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/commits?per_page=250&access_token=${userInfo.accessToken}`)
+        commits = await res.json()
+        totalCommits = commits.length
+
         // fectch branch information
         res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/branches?access_token=${userInfo.accessToken}`)
         branches = await res.json()
-        // console.log(branches)
-        /* for (let p = 0; p < branches.length; p++) {
-          var commitData = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/commits?per_page=200&sha=${(branches[p]).commit.sha}&access_token=${userInfo.accessToken}`);
+        for (let p = 0; p < branches.length; p++) {
+          var statusData = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/statuses/${branches[p].commit.sha}?access_token=${userInfo.accessToken}`);
+          (branches[p])['statusData'] = await statusData.json()
+          var commitData = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/commits?per_page=200&sha=${branches[p].commit.sha}&access_token=${userInfo.accessToken}`);
           (branches[p])['commitData'] = await commitData.json()
         }
-        console.log(branches)
-        */
-
-        // console.log(branches)
+        // populate repo list with all the repo names
+        for (let i = 0; i < repos.length; i++) {
+          repoList.push({
+            'repo': (repos[i]).name
+          })
+        }
         console.log('Started fetching all the information')
         // populate the object that stores the information per developer
         for (var d = contributors.length - 1; d >= 0; d--) {
@@ -77,7 +96,7 @@ var userInfo = {};
           count++
         }
         // This will invert the data
-        var count = 0
+        count = 0
         for (var i = (closedPulls).length - 1; i >= 0; i--) {
           // pull request number
           pullRequestNo[count] = {
@@ -108,10 +127,6 @@ var userInfo = {};
               'node_Additions': '',
               'node_Deletions': ''
             })
-            // populate the merged commits object at the same time
-            // commits per pull request
-            var res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/pulls/${closedPulls[i].number}/commits?&access_token=${userInfo.accessToken}`)
-            commits.push(await res.json())
           }
           count++
         } // closedPulls loop ends here
@@ -152,63 +167,98 @@ var userInfo = {};
             'Total Commits': (commits[j]).length
 
           })
-          totalCommits += (commits[j].length);
-          (summary[j]).Total_Commits = (commits[j].length)
         }
+        // find out the state of each merge pull request, this loop must only be called if there were shoert lived branches
+        for (let h = 0; h < summary.length; h++) {
+          for (let r = 0; r < branches.length; r++) {
+            if (((summary[h]).Branch === (branches[r]).name) && (((branches[r]).statusData).length !== 0)) {
+              if (((branches[r]).statusData[0]).state === 'success') {
+                (summary[h])['State'] = ((branches[r]).statusData[0]).state
+                totalHealthyBuilds++
+              } else if (((branches[r]).statusData[0]).state !== 'success') {
+                (summary[h])['State'] = ((branches[r]).statusData[0]).state
+              }
+            } else if (((summary[h]).Branch === (branches[r]).name) && (((branches[r]).statusData).length === 0)) {
+              (summary[h])['State'] = 'NOT_CONF'
+            }
+          }
+        }
+        // checks the total commits of the branches
+        for (let h = 0; h < summary.length; h++) {
+          for (let r = 0; r < branches.length; r++) {
+            if (((summary[h]).Branch === (branches[r]).name)) {
+              (summary[h]).Total_Commits = (branches[r]).commitData.length
+            } else {
+            }
+          }
+        }
+
         // generate release id and developer pull request per release
-        mergedPullPerDev()
+        await mergedPullPerDev()
         // this function plots the bar graphs under sprints
-        pullDetails()
+        await pullDetails()
         console.log('Done fetching all the information')
+        acquiredData = true
       } catch (err) { console.log(err) }
+      document.getElementById('loader').style.display = 'none'
+      $('#overview').trigger('click')
     })
   return false
 })()
 
+function urlParam (name) {
+  var results = new RegExp('[\?&]' + name + '=([^&#]*)')
+    .exec(window.location.search)
+
+  return (results !== null) ? results[1] || 0 : false
+}
+
 // href functions
 $(document).ready(function () {
-  $('#overview').click(function () {
-    document.getElementById('cards').innerHTML = null
+  $('#frontOverview').on('click', 'a', function () {
+    console.log($(this).text())
+    userInfo.repository = $(this).text()
+    window.location.href = `/charts?repository=${userInfo.repository}`
+    return false
+  })
+  $('body').on('click', '#logout', function () {
+    window.location.href = `/`
+    return false
+  })
 
+  $('#overview').click(function () {
+    document.getElementById('body').style.backgroundColor = 'grey'
+
+    document.getElementById('cards').innerHTML = null
+    document.getElementById('theading').innerHTML = null
     document.getElementById('3cards').innerHTML = null
     var overViewInfo = document.getElementById('overviewLayout-template').innerHTML
     var template = Handlebars.compile(overViewInfo)
     var sprintNumber = releaseInfo.actualreleaseDates.length - 1
     var overviewData = template({
-      title: 'welcome setlaela',
-      NumberOfSprint: sprintNumber
+      title: 'welcome to ' + userInfo.repository + ' Repository Statistics',
+      NumberOfSprint: sprintNumber,
+      totalCommits: totalCommits,
+      repos: repoList,
+      statusOnMaster: statusOnMaster
     })
     document.getElementById('frontOverview').innerHTML = overviewData
+    d3.selectAll('table').remove()
+    d3.selectAll('svg').remove()
     plotBar(contributionsPerSprint, getNames())
-    return false
-  })
-  $('#sprintsss').click(function () {
-  // handlebar code
-    var quoteInfo = document.getElementById('quote-template').innerHTML
-
-    var template = Handlebars.compile(quoteInfo)
-    // 2b. Passing the array data
-    var quoteData = template({
-      name: 'Sprints',
-      quotes: [
-        {quote: "If you don't know where you are going, you might wind up someplace else."},
-        {quote: "You better cut the pizza in four pieces because I'm not hungry enough to eat six."},
-        {quote: 'I never said most of the things I said.'},
-        {quote: "Nobody goes there anymore because it's too crowded."}
-      ]
-    })
-    // end of handlebar code
-    document.getElementById('quoteData').innerHTML = quoteData
+    overviewPie()
     return false
   })
 
   $('#pullOverview').click(async function () {
+    document.getElementById('body').style.backgroundColor = 'white'
     var tableInfor = document.getElementById('table_heading_template').innerHTML
     var template = Handlebars.compile(tableInfor)
     var info = template({
       title: 'Pull Request Overview'
     })
     document.getElementById('frontOverview').innerHTML = null
+
     document.getElementById('3cards').innerHTML = null
     document.getElementById('theading').innerHTML = info
     // update the information cards
@@ -221,7 +271,8 @@ $(document).ready(function () {
       text2: summary.length,
       card3: 'Total Commits:',
       text3: totalCommits,
-      card4: 'HAhaha'
+      card4: 'Healthy Builds',
+      text4: totalHealthyBuilds + '/' + summary.length
     })
     document.getElementById('frontOverview').innerHTML = null
     document.getElementById('3cards').innerHTML = null
@@ -230,6 +281,7 @@ $(document).ready(function () {
     return false
   })
   $('#pullreview').click(async function () {
+    document.getElementById('body').style.backgroundColor = 'white'
     var tableInfor = document.getElementById('table_heading_template').innerHTML
     var template = Handlebars.compile(tableInfor)
     var info = template({
@@ -247,12 +299,15 @@ $(document).ready(function () {
     })
     document.getElementById('frontOverview').innerHTML = null
     document.getElementById('cards').innerHTML = null
+
     document.getElementById('3cards').innerHTML = infoCards
+    console.log(pullReview)
     await genReviewTable(pullReview)
 
     return false
   })
   $('#pullCommits').click(async function () {
+    document.getElementById('body').style.backgroundColor = 'white'
     var tableInfor = document.getElementById('table_heading_template').innerHTML
     var template = Handlebars.compile(tableInfor)
     var info = template({
@@ -270,11 +325,13 @@ $(document).ready(function () {
     })
     document.getElementById('frontOverview').innerHTML = null
     document.getElementById('cards').innerHTML = null
+
     document.getElementById('3cards').innerHTML = infoCards
     await genPullCommitsTable(pullCommits)
     return false
   })
   $('#pullReqNo').on('click', '#pullOption', function () {
+    document.getElementById('body').style.backgroundColor = 'white'
     var self = $(this).closest('option')
     var selected = self.find('id').text()
   })
@@ -293,6 +350,7 @@ $(document).ready(function () {
       card3: 'Review ANalytics',
       card4: 'Review ANalytics'
     })
+    document.getElementById('body').style.backgroundColor = 'white'
     document.getElementById('frontOverview').innerHTML = null
     document.getElementById('3cards').innerHTML = null
     document.getElementById('cards').innerHTML = infoCards
@@ -330,7 +388,73 @@ $(document).ready(function () {
     return false
   })
 })
+function overviewPie () {
+  var data = contributorMergedPullReq
+  var div = '#overviewPie'
+  var pie = d3.layout.pie()
+    .value(function (d) { return d.pulls })
+    .sort(null)
 
+  var w = 300
+  var h = 300
+
+  var outerRadius = (w - 2) / 2
+
+  var color = d3.scale.category10()
+  // .range(['#4daf4a','#377eb8','#ff7f00','#984ea3','#e41a1c']);
+
+  var arc = d3.svg.arc()
+    .innerRadius(0)
+    .outerRadius(outerRadius)
+
+  var svg = d3.select(div)
+    .append('svg')
+    .attr({
+      width: w,
+      height: h,
+      class: 'shadow'
+    }).append('g')
+    .attr({
+      transform: 'translate(' + w / 2 + ',' + h / 2 + ')'
+    })
+  var path = svg.selectAll('path')
+    .data(pie(data))
+    .enter()
+    .append('path')
+    .attr({
+      d: arc,
+      fill: function (d, i) {
+        return color(i)
+      }
+    })
+    .style({
+      'fill-opacity': 0.15,
+      stroke: function (d, i) {
+        return color(i)
+      },
+      'stroke-width': '2px'
+    })
+
+  var text = svg.selectAll('text')
+    .data(pie(data))
+    .enter()
+    .append('text')
+    .attr('transform', function (d) {
+      return 'translate(' + arc.centroid(d) + ')'
+    })
+
+    .attr('text-anchor', 'middle')
+    .text(function (d) {
+      return d.data.name + ' (' + d.data.pulls + ')'
+    })
+    .style({
+      fill: function (d, i) {
+        return color(i)
+      },
+      'font-size': '18px'
+
+    })
+}
 function contributionsPerDevPerRelease (array) {
   var data = []
   var z = 0
@@ -479,6 +603,7 @@ function genPieChart (pieData, tableData) {
     .attr({
       transform: 'translate(' + w / 2 + ',' + h / 2 + ')'
     })
+
   var path = svg.selectAll('path')
     .data(pie(data))
     .enter()
@@ -518,22 +643,22 @@ function genPieChart (pieData, tableData) {
     })
 
     // gen table
-
   tabulate(tableData.data, tableData.column, tableData.div)
 }
 function genSummaryTable (data) {
   d3.selectAll('table').remove()
   d3.selectAll('svg').remove()
   // render the tables
-  tabulate(data, ['Pull_Request', 'Branch', 'User', 'Merge_Date', 'Total_Commits', 'Message']) // 2 column table
+  tabulate(data, ['Pull_Request', 'User', 'Branch', 'State', 'Merge_Date', 'Total_Commits', 'Message']) // 2 column table
 }
 
 function genReviewTable (data) {
+  console.log(data)
   d3.select('svg').remove()
   // render the tables
   d3.selectAll('table').remove()
   d3.selectAll('svg').remove()
-  tabulate(data, ['Pull_Request', 'Reviewer', 'Reviewee', 'Date', 'Status', 'Review Message'])
+  tabulate(data, ['Pull Request', 'Reviewer', 'Reviewee', 'Date', 'Status', 'Review Message'])
 }
 function genPullCommitsTable (stats) {
   d3.select('svg').remove()
