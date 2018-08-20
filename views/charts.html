@@ -23,7 +23,7 @@ td, th {
 <script type="text/javascript" src="/cdn/javascripts/dataFile.js"></script>
 <script src="../../cdn/d3/d3-timeline.js"></script>
 </head>
-<body>
+<body id = 'body'>
 
   <div id = "sidenav" class="sidenav">
     <a id = "overview" href="#overview" >Overview</a>
@@ -40,7 +40,11 @@ td, th {
       <a id="pullCommits" href="#pullCommits">Pull Request Commits</a>
     </div>
 
-  </div>
+  </div>  
+  <div id="loader"  >
+    <h1 class="center">Please wait while we fetch your repository information.</h1>
+      <img src ="/cdn/gifs/RubixCube-8.gif" class="center">
+    </div>
 
   <div class="main">
       <!-- It is better to separate your template from the JS and you do that by placing the template in its own tag -->
@@ -48,18 +52,28 @@ td, th {
 
 
 <!--  code from James-->
+
 <div id="frontOverview"></div>
- <script id = "overviewLayout-template">
+ <script id = "overviewLayout-template" type="text/x-handlebars-template">
 
 <div class="Orow3">
-  <div class="Ocolumn3" style="background-color:#aaa;">
-    <h2>{{title}}</h2>
-    <p>Some text..</p>
+  <div class="Ocolumn3" style="background-color:black;">
+    <h1 style="color:white;">{{title}}</h1>
   </div>
-  <div class="Ocolumn4" style="background-color:#bbb;">
-    <p>click to choose Repos</p>
-    <p>logout</p>
-  </div>
+  <div class="Ocolumn4" style="background-color:black;">
+      <div class="repodropdown"  style="float:right">
+        <button class="repodropbtn" >Repositories</button>
+        <div class="repodropdown-content">
+          {{#each repos}}
+          <a>{{repo}}</a>
+          {{/each}}
+        </div>      
+    </div>
+    <div class="repodropdown"  style="float:right">
+        <button type = "button" id= "logout" type="submit " class="repodropbtn" >Logout</button>
+    </div>
+  
+  </div>  
 </div>
 
 <div class="main2">
@@ -70,7 +84,7 @@ td, th {
   </div>
   <div class="Ocolumn1" style="background-color:#bbb;">
     <h2>Total Commits</h2>
-    <p>Some text..</p>
+    <p>{{totalCommits}}</p>
   </div>
   <div class="Ocolumn1" style="background-color:#ccc;">
     <h2>Main Language</h2>
@@ -80,22 +94,32 @@ td, th {
 <div class="Orow2">
   <div class="Ocolumn5" style="background-color:#aaa;">
     <h2>Build Status of Master</h2>
-    <p>Some text..</p>
+    <p>{{statusOnMaster}}</p>
   </div>
   <div class="Ocolumn5" style="background-color:#bbb;">
-    <h2>TSB</h2>
-    <p>Some text..</p>
+    <h2>Trunk Based Analysis Score</h2>
+    <p>%</p>
   </div>
+</div>
+<div class="Osidenav">
+  <h2>Contributors</h2>
+  <a href="#about">About</a>
+  <a href="#services">Services</a>
+  <a href="#clients">Clients</a>
+  <a href="#contact">Contact</a>
 </div>
 </div>
 <div class="Orow2">
   <div class="Ocolumn2" style="background-color:#aaa;">
-    <h2>Column 1</h2>
-    <p>Some text..</p>
+      <h2>Project Contribution Per Developer</h2>
+    <div id = "overviewPie" style="display:inline-block"></div>
+
   </div>
   <div id="barGraph"class="Ocolumn2" style="background-color:#bbb;">
+      <h2>Column 1</h2>
   </div>
 </div>
+
 
 
 <div class="Osidenav">
@@ -103,8 +127,8 @@ td, th {
   <a href="#{{this}}" >{{this}}</a>
   {{/each}}
 </div>
-</script>
 
+</script>
     <!--  code from James-->
 
       <div id ="theading" ></div>
@@ -113,7 +137,7 @@ td, th {
       <script id= "table_heading_template" type="text/x-handlebars-template">
         <h1 >{{title}}</h1>
       </script>
-      <script id = "cards_template" >
+      <script id = "cards_template" type="text/x-handlebars-template" >
         <div class="row2" >
 
           <div class="column2" style="background-color:black;">
@@ -135,7 +159,7 @@ td, th {
         
         </div>
       </script>
-      <script id = "3cards_template" >
+      <script id = "3cards_template" type="text/x-handlebars-template">
         <div class="row3" >
 
           <div class="column3" style="background-color:black;">
@@ -167,6 +191,7 @@ td, th {
 
       <div id="summary"></div>
       <div class = "row">
+        
         <div>
           <div class = "column" id = "mergedPie" style = ></div>
         </div>
@@ -188,11 +213,6 @@ td, th {
 </div>
 
        <div id="info"></div>
-       <div id="quoteData"></div>
-      <script id="quote-template" type="text/x-handlebars-template">
-
-
-      </script>
 
       <script>
 /* Loop through all dropdown buttons to toggle between hiding and showing its dropdown content - This allows the user to have multiple dropdowns without any conflict */
@@ -239,6 +259,7 @@ function filterFunction() {
     }
 }
 </script>
+
 
 </body>
 </html>
