@@ -241,7 +241,8 @@ $(document).ready(function () {
       NumberOfSprint: sprintNumber,
       totalCommits: totalCommits,
       repos: repoList,
-      statusOnMaster: statusOnMaster
+      statusOnMaster: statusOnMaster,
+      names: names
     })
     document.getElementById('frontOverview').innerHTML = overviewData
     d3.selectAll('table').remove()
