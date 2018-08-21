@@ -232,6 +232,7 @@ $(document).ready(function () {
     document.getElementById('cards').innerHTML = null
     document.getElementById('theading').innerHTML = null
     document.getElementById('3cards').innerHTML = null
+    document.getElementById('defaulView').innerHTML = null
     var overViewInfo = document.getElementById('overviewLayout-template').innerHTML
     var template = Handlebars.compile(overViewInfo)
     var sprintNumber = releaseInfo.actualreleaseDates.length - 1
@@ -262,6 +263,7 @@ $(document).ready(function () {
     document.getElementById('frontOverview').innerHTML = null
 
     document.getElementById('3cards').innerHTML = null
+    document.getElementById('defaulView').innerHTML = null
     document.getElementById('theading').innerHTML = info
     // update the information cards
     var cardInfor = document.getElementById('cards_template').innerHTML
@@ -278,6 +280,7 @@ $(document).ready(function () {
     })
     document.getElementById('frontOverview').innerHTML = null
     document.getElementById('3cards').innerHTML = null
+    document.getElementById('defaulView').innerHTML = null
     document.getElementById('cards').innerHTML = infoCards
     await genSummaryTable(summary)
     return false
@@ -301,6 +304,7 @@ $(document).ready(function () {
     })
     document.getElementById('frontOverview').innerHTML = null
     document.getElementById('cards').innerHTML = null
+    document.getElementById('defaulView').innerHTML = null
 
     document.getElementById('3cards').innerHTML = infoCards
     console.log(pullReview)
@@ -327,6 +331,7 @@ $(document).ready(function () {
     })
     document.getElementById('frontOverview').innerHTML = null
     document.getElementById('cards').innerHTML = null
+    document.getElementById('defaulView').innerHTML = null
 
     document.getElementById('3cards').innerHTML = infoCards
     await genPullCommitsTable(pullCommits)
