@@ -19,7 +19,7 @@ function dynamicChart () {
     }
   ]
 
-  var ageNames = ['Total Commits', 'Total Pull Request', 'Reviewed Pull Request', 'State', 'Commits On master', 'middleAge', 'retired']
+  var ageNames = ['Total Commits', 'Total Pull Request', 'Reviewed Pull Request', 'State', 'Commits On master', 'Add', 'Add More']
   var ids = ['Under 5 Years', '5 to 13 Years', '14 to 17 years', '18 to 24 years', '25 to 44 Years', '45 to 64 Years', '65 Years and Over']
 
   // Let's populate the categoeries checkboxes

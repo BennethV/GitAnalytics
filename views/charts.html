@@ -41,7 +41,6 @@ td, th {
       <a id="pullOverview" href="#review">Pull Request overview</a>
       <a id="pullreview" href="#review">Pull Request Review</a>
       <a id="pullPerDev" href="#pullPerDev">Pull Request Per Developer</a>
-      <a id="pullCommits" href="#pullCommits">Pull Request Commits</a>
     </div>
 
   </div>  
@@ -97,7 +96,7 @@ td, th {
   </div>
   <div class="Ocolumn1" style="background-color:#ccc;">
     <h2>Main Language</h2>
-    <p>Some text..</p>
+    <p>Don'tForgentMe.JS:)</p>
   </div>
 </div>
 <div class="Orow2">
@@ -125,7 +124,7 @@ td, th {
 
   </div>
   <div id="stacked1"class="Ocolumn2" style="background-color:#bbb;">
-      <h2>Column 1</h2>
+      <h2>Number of line of code added vs release dates</h2>
   </div>
 </div>
 
@@ -140,6 +139,7 @@ td, th {
       <div id= "3cards"></div>
       <script id= "table_heading_template" type="text/x-handlebars-template">
         <h1 >{{title}}</h1>
+        <h3>{{description}}</h3>
       </script>
       <script id = "cards_template" type="text/x-handlebars-template" >
         <div class="row2" >
@@ -178,7 +178,6 @@ td, th {
             <h2 style="color:white">{{card3}}</h2>
             <p style="color:white" >{{text3}}</p>
           </div>
-        
         </div>
 
       </script>
@@ -226,7 +225,10 @@ td, th {
         <div>
           <div class = "column" id = "closedPullsPerDevTable"></div>
         </div>               
-      </div>            
+      </div> 
+      <div id='dashboard'>
+
+      </div>           
       </div>
 
       
