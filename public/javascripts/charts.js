@@ -232,6 +232,7 @@ $(document).ready(function () {
     document.getElementById('cards').innerHTML = null
     document.getElementById('theading').innerHTML = null
     document.getElementById('3cards').innerHTML = null
+    document.getElementById('defaulView').innerHTML = null
     var overViewInfo = document.getElementById('overviewLayout-template').innerHTML
     var template = Handlebars.compile(overViewInfo)
     var sprintNumber = releaseInfo.actualreleaseDates.length - 1
@@ -255,6 +256,7 @@ $(document).ready(function () {
   $('#pullOverview').click(async function () {
     document.getElementById('body').style.backgroundColor = 'white'
     var tableInfor = document.getElementById('table_heading_template').innerHTML
+
     var template = Handlebars.compile(tableInfor)
     var info = template({
       title: 'Pull Request Overview'
@@ -262,6 +264,7 @@ $(document).ready(function () {
     document.getElementById('frontOverview').innerHTML = null
 
     document.getElementById('3cards').innerHTML = null
+    document.getElementById('defaulView').innerHTML = null
     document.getElementById('theading').innerHTML = info
     // update the information cards
     var cardInfor = document.getElementById('cards_template').innerHTML
@@ -278,8 +281,10 @@ $(document).ready(function () {
     })
     document.getElementById('frontOverview').innerHTML = null
     document.getElementById('3cards').innerHTML = null
+    document.getElementById('defaulView').innerHTML = null
     document.getElementById('cards').innerHTML = infoCards
     await genSummaryTable(summary)
+    dynamicChart()
     return false
   })
   $('#pullreview').click(async function () {
@@ -301,11 +306,12 @@ $(document).ready(function () {
     })
     document.getElementById('frontOverview').innerHTML = null
     document.getElementById('cards').innerHTML = null
+    document.getElementById('defaulView').innerHTML = null
 
     document.getElementById('3cards').innerHTML = infoCards
     console.log(pullReview)
     await genReviewTable(pullReview)
-
+    dynamicChart()
     return false
   })
   $('#pullCommits').click(async function () {
@@ -327,9 +333,11 @@ $(document).ready(function () {
     })
     document.getElementById('frontOverview').innerHTML = null
     document.getElementById('cards').innerHTML = null
+    document.getElementById('defaulView').innerHTML = null
 
     document.getElementById('3cards').innerHTML = infoCards
     await genPullCommitsTable(pullCommits)
+    dynamicChart()
     return false
   })
   $('#pullReqNo').on('click', '#pullOption', function () {
@@ -387,6 +395,7 @@ $(document).ready(function () {
     for (let i = 0; i < tableData.length; i++) {
       await genPieChart(pieData[i], tableData[i])
     }
+    dynamicChart()
     return false
   })
 })

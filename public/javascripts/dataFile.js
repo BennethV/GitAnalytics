@@ -14,6 +14,7 @@ $(document).ready(function () {
 
     plotBar(contributionsPerSprint, getNames())
     var cardInfor = document.getElementById('3cards_template').innerHTML
+    var popUpInfo = document.getElementById('specialPopup').innerHTML
     template = Handlebars.compile(cardInfor)
     var sprintNumber = releaseInfo.actualreleaseDates.length - 1
     var infoCards = template({
@@ -27,13 +28,19 @@ $(document).ready(function () {
     document.getElementById('cards').innerHTML = infoCards
     document.getElementById('frontOverview').innerHTML = null
     document.getElementById('3cards').innerHTML = null
-
+    document.getElementById('popUpContainer').innerHTML = popUpInfo
     document.getElementById('body').style.backgroundColor = 'white'
 
-    dateOfRelease()
-
+    var sprintButton = document.getElementById('button_template').innerHTML
+    document.getElementById('defaulView').innerHTML = sprintButton
     togglePopUp()
-
+    return false
+  })
+  $('body').on('click', '#myBtn', function () {
+    d3.selectAll('table').remove()
+    d3.selectAll('svg').remove()
+    plotTimeline()
+    plotBar(contributionsPerSprint, getNames())
     return false
   })
 })
@@ -73,7 +80,8 @@ function plotTimeline () {
   var day = 1000 * 60 * 60 * 24 // this gives a day in milliseconds
   var testData = cleanData()
   var popupTrack = 0
-  const width = 1000
+  const width = 850
+  var height = 350
   var lastDate = (releaseInfo.expreleaseDates).length - 1
   const SprintLength = releaseInfo.daysElapsed / day
   var endDay = ''
@@ -93,13 +101,14 @@ function plotTimeline () {
       .showTimeAxisTick() // toggles tick marks
       .stack()
       .width(width)
+      .height(height)
       .rotateTicks(45)
       .tickFormat( //
         {format: d3.time.format('%Y-%m-%d'),
           tickTime: d3.time.day,
           tickInterval: 1, // SprintLength,
           tickSize: 6})
-      .margin({left: 70, right: 30, top: 0, bottom: 0})
+      .margin({left: 0, right: 30, top: 0, bottom: 0})
       .click(function (d, i, datum) {
         const relDetails = releaseDetais(i)
 
@@ -117,18 +126,11 @@ function plotTimeline () {
               $('.timelineSeries_' + j).css('fill', 'green')
             }
           }
-
-          if (popupTrack === 0) {
-            togglePopUp()
-          }
-          popupTrack++
         }
       })
-    var svg = d3.select('#timeline1').append('svg').attr('width', 1000).datum(testData).call(chart)
+    var svg = d3.select('#timeline1').append('svg').attr('width', width).datum(testData).call(chart)
   }
   timelineRect()
-  console.log(contributionsPerSprint)
-  console.log(getNames())
 }
 // gets the release dates and stores them
 function getReleaseDates () {
@@ -176,7 +178,7 @@ function noOfDays (date1, date2) {
 // modifies data to be in a supported formate for timeline plot
 function cleanData () {
   var releaseTime = []
-
+  console.log(releaseInfo)
   getexpReleaseDates()
 
   const currentData = releaseInfo
@@ -205,7 +207,7 @@ function getexpReleaseDates () {
   const day = 1000 * 60 * 60 * 24
   // console.log(releaseInfo)
   var daysElapsed = releaseInfo.daysElapsed
-
+  console.log(releaseInfo.actualreleaseDates)
   var noOfReleases = releaseInfo.actualreleaseDates.length
 
   releaseInfo.expreleaseDates[0] = releaseInfo.actualreleaseDates[0]
@@ -315,14 +317,13 @@ function plotBar (data, names) {
   // console.log(data)
   // console.log(names)
 //  console.log(data)
-  var margin = {top: 80, right: 160, bottom: 90, left: 70}
+  var margin = {top: 80, right: 160, bottom: 50, left: 70}
   var width = 550 - margin.left - margin.right,
-    height = 350 - margin.top - margin.bottom
-
+    height = 310 - margin.top - margin.bottom
 
   var iDiv = document.createElement('div')
   iDiv.className = 'main'
-  iDiv.id = 'stacked1'
+  // iDiv.id = 'stacked1'
   document.getElementsByTagName('body')[0].appendChild(iDiv)
 
   var svg = d3.select('#stacked1')
@@ -451,7 +452,7 @@ function plotBar (data, names) {
     .text('Number of lines added')
     // text label for the x axis
   svg.append('text')
-    .attr('transform', 'translate(' + (width / 2) + ' ,' + (height + margin.top + 20) + ')')
+    .attr('transform', 'translate(' + (width / 2) + ' ,' + (height + 20 + 20) + ')')
     .style('text-anchor', 'middle')
     .text('Release Dates')
   svg.append('text')
@@ -473,7 +474,6 @@ function stackedBarOverview (data, names) {
   var margin = {top: 80, right: 160, bottom: 90, left: 70}
   var width = 550 - margin.left - margin.right,
     height = 350 - margin.top - margin.bottom
-
 
   var svg = d3.select('#barGraph')
     .append('svg')
@@ -501,6 +501,7 @@ function stackedBarOverview (data, names) {
     .range([height, 0])
 
   var colors = colorFunction()
+  console.log(colors)
 
   // var colors = ['b33040', '#d25c4d', '#f2b447', '#d9d574']
 
@@ -665,7 +666,6 @@ async function pullDetails () {
     }
 
     contributionsPerSprint = stackeBarData(releaseInfo.actualreleaseDates)
-
   })
   // console.log(summary)
   // console.log(branches)
@@ -727,7 +727,7 @@ function sprintBar (barData, tableData, i) {
   var data = barData
   d3.select('#individualTable').remove()
   d3.select('#individualBar').remove()
-  d3.select('#stacked1').remove()
+  // d3.select('#stacked1').remove()
   // justTesting
   // class = "column"
   // console.log(data)
@@ -856,8 +856,17 @@ function sprintBarData (names, contributions, index) {
 })()
 
 function togglePopUp () {
-  var popup = document.getElementById('myPopup')
+  var popup = document.getElementById('popUpContainer')
   popup.classList.toggle('show')
+}
+// need to sort out the stats
+function dynamicBarData () {
+  var dynamicGraphData = []
+  for (var i = 0; i < summary.length; i++) {
+    dynamicGraphData[i] = { state: summary[i].Date,
+      stats: i // should be an array
+    }
+  }
 }
 
 /*

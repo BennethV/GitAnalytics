@@ -419,7 +419,99 @@ Repository list dropdown button
     margin: 4px 2px;
     cursor: pointer;
 }
-.button3 {padding: 14px 40px;}
+.button3 {padding: 12px 24px;}
+
+.mytooltip {
+  position:absolute;
+  text-align: center;
+  width: 200px;
+  height:auto;
+  background-color: #EDE3D1;
+  border-radius: 10px;
+  color: #787777;
+  padding: 6px 12px;
+  z-index:3;
+}
+
+.mytooltip:after {
+  box-sizing: border-box;
+  display: inline;
+  width: 100%;
+  line-height: 1;
+  color: #EDE3D1;
+  content: "\25BC";
+  position: absolute;
+  text-align: center;
+  margin: -3px 0 0 0;
+  top: 100%;
+  left: 0;
+}
+
+.mytooltip span {
+    display: block;
+    text-align: center;
+    width: 200px;
+    height: auto;
+    margin: 5px auto;
+  }
+
+#thumbnail {
+    width: 200px;
+    height: auto;
+    margin: 0 auto;
+    color: #787777;
+    text-align: center;
+  }
+/*popUp Stuff*/
+
+/* Popup container - can be anything you want */
+.popup {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* The actual popup */
+.popup .popuptext {
+    visibility: hidden;
+    width: 160px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px 0;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -80px;
+}
+
+/* Popup arrow */
+.popup .popuptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+}
+
+
+.container {
+  margin-top: 20px;
+}
+
+.panel {
+  background-color: #D9D1C7;
+}
+
 
 /*
 Create loader to show while waiting for data to finish loading*/

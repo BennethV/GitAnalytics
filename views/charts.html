@@ -10,6 +10,9 @@
  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   </link>
 
+  <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css'>
+  
+
   <!-- You can download Handlebars at http:// handlebarsjs.com/ and save it as handlebars-v4.0.2.js on your site. Then make it available by adding the following line. -->
   <style type="text/css">
 td, th {
@@ -21,6 +24,7 @@ td, th {
  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script type="text/javascript" src="/cdn/javascripts/dataFile.js"></script>
+<script type="text/javascript" src="/cdn/javascripts/dynamicChart.js"></script>
 <script src="../../cdn/d3/d3-timeline.js"></script>
 </head>
 <body id = 'body'>
@@ -50,6 +54,11 @@ td, th {
       <!-- It is better to separate your template from the JS and you do that by placing the template in its own tag -->
     
 
+<!-- Dynamic Graph -->
+
+   
+
+<!-- Dynamic Graph -->
 
 <!--  code from James-->
 
@@ -171,14 +180,32 @@ td, th {
           </div>
         
         </div>
-      </script>
-           <div>
-       <div id="timeline1"></div>
-        <div>
-          <div>
-          <div id = "stacked1"></div>
-        </div>   
 
+      </script>
+      <script id='specialPopup'><div style="text-align:center" class="popup">
+          <span class="popuptext" id="myPopup">A Simple Popup!</span>
+      </div>
+        
+      </script>
+      <div id=popUpContainer></div>
+
+
+
+
+
+      <div id='defaulView' align="right"></div>
+      
+      <script id="button_template"><button class='button button3' type="button" id='myBtn'>'Click for default view'</button></script>
+      <div class = "row">
+           <div>
+       <div class='column' align='left' id="timeline1"></div>
+        
+        </div> <div>
+
+          <div>
+          <div class='column' id = "stacked1"></div>
+          
+      </div>
        </div>
        </div>
             <div align="centre" id="sprintBarGraph"></div>
@@ -203,13 +230,26 @@ td, th {
       </div>
 
       
-<div class="popup" >
-  <span class="popuptext" id="myPopup">Click the timeline bars for more details</span>
-</div>
+
 
        <div id="info"></div>
-
+ <div class="container">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <form role="form" class="categories">
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-8">
+        <div class="graph"></div>
+      </div>
+    </div>
+  </div>
       <script>
+        
 /* Loop through all dropdown buttons to toggle between hiding and showing its dropdown content - This allows the user to have multiple dropdowns without any conflict */
 var dropdown = document.getElementsByClassName("dropdown-btn");
 var i;
