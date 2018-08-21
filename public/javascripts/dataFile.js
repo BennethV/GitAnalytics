@@ -859,6 +859,15 @@ function togglePopUp () {
   var popup = document.getElementById('popUpContainer')
   popup.classList.toggle('show')
 }
+// need to sort out the stats
+function dynamicBarData () {
+  var dynamicGraphData = []
+  for (var i = 0; i < summary.length; i++) {
+    dynamicGraphData[i] = { state: summary[i].Date,
+      stats: i // should be an array
+    }
+  }
+}
 
 /*
 function getBranchLife () {

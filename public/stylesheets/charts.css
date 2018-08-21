@@ -504,6 +504,14 @@ Repository list dropdown button
 }
 
 
+.container {
+  margin-top: 20px;
+}
+
+.panel {
+  background-color: #D9D1C7;
+}
+
 
 /*
 Create loader to show while waiting for data to finish loading*/
