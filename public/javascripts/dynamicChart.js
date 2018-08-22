@@ -1,8 +1,10 @@
 // Tutorial: http://frameworkish.com/html/2016/05/04/grouped-dynamic-bar-chart-d3.html
 function dynamicChart () {
+
   var data = dynamicBarData()
   var ageNames = ['Total Commits', 'Pull Requests', 'reviewed Pull Request', 'Build status']
   var ids = ['comit', 'pull', 'revPull', 'stattte' ]
+
 
   // Let's populate the categoeries checkboxes
   d3.select('.categories').selectAll('.checkbox')

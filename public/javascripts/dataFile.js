@@ -318,7 +318,14 @@ function plotBar (data, names) {
 //  console.log(data)
   var margin = {top: 80, right: 160, bottom: 50, left: 70}
   var width = 550 - margin.left - margin.right,
+<<<<<<< Updated upstream
     height = 310 - margin.top - margin.bottom
+=======
+    height = 350 - margin.top - margin.bottom
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
 
   var iDiv = document.createElement('div')
   iDiv.className = 'main'
@@ -604,13 +611,6 @@ function stackedBarOverview (data, names) {
     .attr('transform', 'translate(' + (width / 2) + ' ,' + (height + margin.top + 20) + ')')
     .style('text-anchor', 'middle')
     .text('Release Dates')
-  svg.append('text')
-    .attr('x', (width / 2))
-    .attr('y', 0 - (margin.top / 2))
-    .attr('text-anchor', 'middle')
-    .style('font-size', '20px')
-    .style('text-decoration', 'underline')
-    .text('Number of line of code added vs release dates')
 }
 
 function colorFunction () {
