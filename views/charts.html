@@ -10,7 +10,7 @@
  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   </link>
 
-  <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css'>
+  
   
 
   <!-- You can download Handlebars at http:// handlebarsjs.com/ and save it as handlebars-v4.0.2.js on your site. Then make it available by adding the following line. -->
@@ -124,8 +124,8 @@ td, th {
     <div id = "overviewPie" style="display:inline-block"></div>
 
   </div>
-  <div id="stacked1"class="Ocolumn2" style="background-color:#bbb;">
-      <h2>Column 1</h2>
+  <div align='centre' id="barGraph"class="Ocolumn2" style="background-color:#bbb;">
+      <h2>Number of lines added per developer per sprint</h2>
   </div>
 </div>
 
@@ -229,27 +229,29 @@ td, th {
       </div>            
       </div>
 
-      
-
-
        <div id="info"></div>
- <div class="container">
-    <div class="row">
-      <div class="col-md-4">
-        <div class="panel panel-default">
-          <div class="panel-body">
-            <form role="form" class="categories">
-            </form>
+       <div id = 'dynamicBarGraph'></div>
+      <script id='dynamicChart'>
+        <div style='background-color: #F2EDE4'>
+                 <div class="container" style="margin-top: 20px;">
+            <div class="row" >
+              <div class="col-md-4" >
+                <div class="panel panel-default">
+                  <div class="panel-body">
+                    <div  class="categories">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-8">
+                <div class="graph"></div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-      <div class="col-md-8">
-        <div class="graph"></div>
-      </div>
-    </div>
-  </div>
+          </div>
+      </script>
       <script>
-        
+
 /* Loop through all dropdown buttons to toggle between hiding and showing its dropdown content - This allows the user to have multiple dropdowns without any conflict */
 var dropdown = document.getElementsByClassName("dropdown-btn");
 var i;

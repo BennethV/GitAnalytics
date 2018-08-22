@@ -503,7 +503,6 @@ Repository list dropdown button
     border-color: #555 transparent transparent transparent;
 }
 
-
 .container {
   margin-top: 20px;
 }
@@ -559,3 +558,10 @@ Create loader to show while waiting for data to finish loading*/
     width: 50%;
 }
 
+.col-md-4{
+    border-radius: 25px;
+    border: 2px solid #73AD21;
+    padding: 20px; 
+    width: 200px;
+    height: 150px;
+}

@@ -18,6 +18,7 @@ var branches = []
 var totalCommits = 0
 var statusOnMaster = 'SUCCESS'
 var acquiredData = false
+var pullInfo = []
 var userInfo = {};
 
 (async function () {
@@ -36,6 +37,7 @@ var userInfo = {};
         console.log('New Repo: ' + rep)
       }
       console.log(userInfo)
+      getReleases()
       try {
         var count = 0
         // User's details
@@ -68,6 +70,7 @@ var userInfo = {};
           var commitData = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/commits?per_page=200&sha=${branches[p].commit.sha}&access_token=${userInfo.accessToken}`);
           (branches[p])['commitData'] = await commitData.json()
         }
+
         // populate repo list with all the repo names
         for (let i = 0; i < repos.length; i++) {
           repoList.push({
@@ -193,8 +196,17 @@ var userInfo = {};
           }
         }
 
+        for (var i = 0; i < summary.length; i++) {
+          const pullNo = (summary[i]).Pull_Request
+          const result = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/pulls/${pullNo}/files?state=closed&access_token=${userInfo.accessToken}`)
+          const data = await result.json()
+          pullInfo.push(data)
+        }
+
         // generate release id and developer pull request per release
         await mergedPullPerDev()
+        // console.log(branches[23].commitData)
+        console.log(summary)
         // this function plots the bar graphs under sprints
         await pullDetails()
         console.log('Done fetching all the information')
@@ -233,6 +245,7 @@ $(document).ready(function () {
     document.getElementById('theading').innerHTML = null
     document.getElementById('3cards').innerHTML = null
     document.getElementById('defaulView').innerHTML = null
+    document.getElementById('dynamicBarGraph').innerHTML = null
     var overViewInfo = document.getElementById('overviewLayout-template').innerHTML
     var template = Handlebars.compile(overViewInfo)
     var sprintNumber = releaseInfo.actualreleaseDates.length - 1
@@ -248,7 +261,7 @@ $(document).ready(function () {
     document.getElementById('frontOverview').innerHTML = overviewData
     d3.selectAll('table').remove()
     d3.selectAll('svg').remove()
-    plotBar(contributionsPerSprint, getNames())
+    stackedBarOverview(contributionsPerSprint, getNames())
     overviewPie()
     return false
   })
@@ -261,13 +274,10 @@ $(document).ready(function () {
     var info = template({
       title: 'Pull Request Overview'
     })
-    document.getElementById('frontOverview').innerHTML = null
-
-    document.getElementById('3cards').innerHTML = null
-    document.getElementById('defaulView').innerHTML = null
     document.getElementById('theading').innerHTML = info
     // update the information cards
     var cardInfor = document.getElementById('cards_template').innerHTML
+    var dynamicBar = document.getElementById('dynamicChart').innerHTML
     template = Handlebars.compile(cardInfor)
     var infoCards = template({
       card1: 'Closed Pulls:',
@@ -279,6 +289,8 @@ $(document).ready(function () {
       card4: 'Healthy Builds',
       text4: totalHealthyBuilds + '/' + summary.length
     })
+
+    document.getElementById('dynamicBarGraph').innerHTML = dynamicBar
     document.getElementById('frontOverview').innerHTML = null
     document.getElementById('3cards').innerHTML = null
     document.getElementById('defaulView').innerHTML = null
@@ -309,7 +321,9 @@ $(document).ready(function () {
     document.getElementById('defaulView').innerHTML = null
 
     document.getElementById('3cards').innerHTML = infoCards
-    console.log(pullReview)
+
+    var dynamicBar = document.getElementById('dynamicChart').innerHTML
+    document.getElementById('dynamicBarGraph').innerHTML = dynamicBar
     await genReviewTable(pullReview)
     dynamicChart()
     return false
@@ -363,11 +377,11 @@ $(document).ready(function () {
     document.getElementById('body').style.backgroundColor = 'white'
     document.getElementById('frontOverview').innerHTML = null
     document.getElementById('3cards').innerHTML = null
+    document.getElementById('dynamicBarGraph').innerHTML = null
     document.getElementById('cards').innerHTML = infoCards
 
     // await genPieChart(contributorClosedPullReq, '#closedPie')
     // generate statistics for developer pull request table for every release
-
     var tableData = []
 
     tableData.push({
@@ -664,7 +678,6 @@ function genSummaryTable (data) {
 }
 
 function genReviewTable (data) {
-  console.log(data)
   d3.select('svg').remove()
   // render the tables
   d3.selectAll('table').remove()
