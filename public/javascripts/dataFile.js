@@ -30,7 +30,7 @@ $(document).ready(function () {
     document.getElementById('3cards').innerHTML = null
     document.getElementById('popUpContainer').innerHTML = popUpInfo
     document.getElementById('body').style.backgroundColor = 'white'
-
+    document.getElementById('dynamicBarGraph').innerHTML = null
     var sprintButton = document.getElementById('button_template').innerHTML
     document.getElementById('defaulView').innerHTML = sprintButton
     togglePopUp()
@@ -41,6 +41,7 @@ $(document).ready(function () {
     d3.selectAll('svg').remove()
     plotTimeline()
     plotBar(contributionsPerSprint, getNames())
+    dynamicBarData()
     return false
   })
 })
@@ -55,35 +56,31 @@ var SprintLength = ''
 var startDate = ''
 var graphState = []
 // fetches the release information from github
-const getReleases = async () => {
+async function getReleases () {
   try {
-    await fetch('http://127.0.0.1:3000/javascripts/data.json')
-      .then((res) => res.text())
-      .then(async function (data) {
-        userInfo = JSON.parse(data)
-      })
     const res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/releases?access_token=${userInfo.accessToken}`)
     const rawReleaseInfo = await res.json()
-    return {rawReleaseInfo}
+    rawReleaseData = rawReleaseInfo
+    console.log(rawReleaseData)
+    getReleaseDates()
   } catch (err) { console.log(err) }
 }
+/*
 // draws the timeline
 const dateOfRelease = () => {
   getReleases().then((res) => {
-    rawReleaseData = res.rawReleaseInfo
-    getReleaseDates()
+
   //  cleanBranchInfo()
   })
 }
+*/
 
 function plotTimeline () {
   var day = 1000 * 60 * 60 * 24 // this gives a day in milliseconds
   var testData = cleanData()
-  var popupTrack = 0
   const width = 850
   var height = 350
   var lastDate = (releaseInfo.expreleaseDates).length - 1
-  const SprintLength = releaseInfo.daysElapsed / day
   var endDay = ''
   const actualLastDay = parseInt(releaseInfo.actualreleaseDates[lastDate])
   const expLastDay = parseInt(releaseInfo.expreleaseDates[lastDate])
@@ -112,8 +109,9 @@ function plotTimeline () {
       .click(function (d, i, datum) {
         const relDetails = releaseDetais(i)
 
-        // verifies that the graph has not been ploted
         var devNames = getNames()
+        console.log(devNames)
+        console.log(contributionsPerSprint)
         var sprintBarInfo = sprintBarData(devNames, contributionsPerSprint, i)
 
         if ((sprintBarInfo.length !== 0)) {
@@ -146,6 +144,7 @@ function getReleaseDates () {
 
   var j = 0
   for (var i = rawReleaseData.length - 1; i >= 0; i--) {
+    var beginDate = ''
     const date = new Date((rawReleaseData[i].published_at).substring(0, 10))
     releaseInfo.actualreleaseDates[j] = date.getTime()
     releaseInfo.releaser[j] = rawReleaseData[i].author.login
@@ -158,13 +157,13 @@ function getReleaseDates () {
       releaseInfo.releaseDay = date.getDay()
     }
     if (i === 0 && releaseInfo.daysElapsed !== 0) {
-      startDate = releaseInfo.actualreleaseDates[0] - releaseInfo.daysElapsed;
+      beginDate = releaseInfo.actualreleaseDates[0] - releaseInfo.daysElapsed;
 
-      (releaseInfo.actualreleaseDates).unshift(startDate)
+      (releaseInfo.actualreleaseDates).unshift(beginDate)
+      startDate = convertTimestamp(beginDate)
     }
     j++
   }
-  startDate = convertTimestamp(startDate)
 }
 
 // gets the difference between two dates
@@ -207,7 +206,7 @@ function getexpReleaseDates () {
   const day = 1000 * 60 * 60 * 24
   // console.log(releaseInfo)
   var daysElapsed = releaseInfo.daysElapsed
-  console.log(releaseInfo.actualreleaseDates)
+
   var noOfReleases = releaseInfo.actualreleaseDates.length
 
   releaseInfo.expreleaseDates[0] = releaseInfo.actualreleaseDates[0]
@@ -627,7 +626,7 @@ function colorFunction () {
     '#E64D66', '#4DB380', '#FF4D4D', '#99E6E6', '#6666FF']
   return colorArray
 };
-
+/*
 const getlinesPerPull = async () => {
   var pullInfo = []
   for (var i = 0; i < summary.length; i++) {
@@ -638,43 +637,43 @@ const getlinesPerPull = async () => {
   }
   return {pullInfo}
 }
+*/
+function pullDetails () {
+  for (var i = 0; i < pullInfo.length; i++) {
+    var additions = 0
+    var deletions = 0
+    var nodeAdds = 0
+    var nodeDeletion = 0
+    for (var j = 0; j < pullInfo[i].length; j++) {
+      var filename = ((pullInfo[i])[j]).filename
+      filename = filename.substring(0, 12)
+      if (filename !== 'node_modules') {
+        additions += ((pullInfo[i])[j]).additions
+        deletions += ((pullInfo[i])[j]).deletions
+      } else {
+        nodeAdds += ((pullInfo[i])[j]).additions
+        nodeDeletion += ((pullInfo[i])[j]).deletions
+      }
+    };
+    (summary[i]).additions = additions;
+    (summary[i]).normal_Delitions = deletions;
+    (summary[i]).node_Additions = nodeAdds;
+    (summary[i]).node_Deletions = nodeDeletion
+  }
 
-async function pullDetails () {
-  await getlinesPerPull().then((res) => {
-    const pullInfo = res.pullInfo
-
-    for (var i = 0; i < pullInfo.length; i++) {
-      var additions = 0
-      var deletions = 0
-      var nodeAdds = 0
-      var nodeDeletion = 0
-      for (var j = 0; j < pullInfo[i].length; j++) {
-        var filename = ((pullInfo[i])[j]).filename
-        filename = filename.substring(0, 12)
-        if (filename !== 'node_modules') {
-          additions += ((pullInfo[i])[j]).additions
-          deletions += ((pullInfo[i])[j]).deletions
-        } else {
-          nodeAdds += ((pullInfo[i])[j]).additions
-          nodeDeletion += ((pullInfo[i])[j]).deletions
-        }
-      };
-      (summary[i]).additions = additions;
-      (summary[i]).normal_Delitions = deletions;
-      (summary[i]).node_Additions = nodeAdds;
-      (summary[i]).node_Deletions = nodeDeletion
-    }
-
-    contributionsPerSprint = stackeBarData(releaseInfo.actualreleaseDates)
-  })
+  stackeBarData()
+  console.log(contributionsPerSprint)
   // console.log(summary)
   // console.log(branches)
   // getBranchLife()
 }
 
-function stackeBarData (releaseDates) {
+function stackeBarData () {
+  console.log('stacked bar data start')
+  releaseDates = releaseInfo.actualreleaseDates
   var data = []
   const names = getNames()
+  console.log(releaseDates)
   for (var i = 0; i < releaseDates.length - 1; i++) {
     var obj = {}
     for (var j = 0; j < names.length; j++) {
@@ -686,14 +685,19 @@ function stackeBarData (releaseDates) {
   // console.log(data)
 
   // console.log(summary)
-
+  console.log(summary)
   for (var i = 0; i < summary.length; i++) {
-    (data[((summary[i]).release_id - 1)])[(summary[i]).User] += (summary[i]).additions
-    var yr = releaseDates[((summary[i]).release_id)];
+    var index = ((summary[i]).release_id - 1);
+    (data[index])[(summary[i]).User] += (summary[i]).additions
+    console.log(data[index])
+    var yr = releaseDates[((summary[i]).release_id)]
+    console.log(yr);
     (data[((summary[i]).release_id - 1)])['year'] = convertTimestamp(yr)
   }
+  console.log(data)
+  contributionsPerSprint = data
   // console.log(data)
-  console.log('I am here')
+  console.log('stacked bar data end')
   return data
 }
 
@@ -840,20 +844,18 @@ function sprintBar (barData, tableData, i) {
   tabulate(tableData.data, tableData.columns, div = tableDiv)
 }
 
-function sprintBarData (names, contributions, index) {
-  var cleanData = []
+function sprintBarData (names, devContributions, index) {
+  console.log(names)
+  console.log(devContributions)
+  var cleanSprintData = []
   for (var i = 0; i < names.length; i++) {
-    cleanData[i] = {'Letter': names[i],
-      'Freq': (contributions[index])[names[i]]
+    cleanSprintData[i] = {'Letter': names[i],
+      'Freq': (devContributions[index])[names[i]]
     }
   }
 
-  return cleanData
+  return cleanSprintData
 }
-
-(function () {
-  dateOfRelease()
-})()
 
 function togglePopUp () {
   var popup = document.getElementById('popUpContainer')
@@ -861,12 +863,44 @@ function togglePopUp () {
 }
 // need to sort out the stats
 function dynamicBarData () {
+  // var trendData = ['Total Commits', 'Total Pull Request', 'Reviewed Pull Request', 'State', 'Commits On master', 'middleAge', 'retired']
   var dynamicGraphData = []
+  var numberOfDates = []
+
   for (var i = 0; i < summary.length; i++) {
-    dynamicGraphData[i] = { state: summary[i].Date,
-      stats: i // should be an array
-    }
+    numberOfDates[i] = ((summary[i].Merge_Date).substring(0, 10))
   }
+  numberOfDates.removeDuplicates()
+
+  console.log(numberOfDates)
+
+  for (var i = 0; i < numberOfDates.length; i++) {
+    var overalCommits = 0
+    var overallPullReq = 0
+    var pullReviewCount = 0
+    var buildStatus = 0 // will finish with this
+    for (var j = 0; j < summary.length; j++) {
+      if (numberOfDates[i] === (summary[j].Merge_Date.substring(0, 10))) {
+        console.log(summary[j].Total_Commits)
+        overalCommits += summary[j].Total_Commits
+        overallPullReq++
+      }
+      if ((summary[j].State === 'success') && numberOfDates[i] === (summary[j].Merge_Date.substring(0, 10))) {
+        buildStatus = 1
+      }
+    }
+    for (var n = 0; n < pullReview.length; n++) {
+      if (numberOfDates[i] === (pullReview[n].Date).substring(0, 10)) {
+        pullReviewCount++
+      }
+    }
+    var stats = [overalCommits, overallPullReq, pullReviewCount, buildStatus]
+    dynamicGraphData[i] = { 'state': numberOfDates[i],
+      'stats': stats }
+  }
+
+  console.log(dynamicGraphData)
+  return dynamicGraphData
 }
 
 /*

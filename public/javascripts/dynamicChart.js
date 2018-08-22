@@ -1,26 +1,10 @@
 // Tutorial: http://frameworkish.com/html/2016/05/04/grouped-dynamic-bar-chart-d3.html
 function dynamicChart () {
-  var data = [
-    {
-      state: '2018-05-15',
-      stats: [2704659, 4499890, 2159981, 3853788, 10604510, 8819342, 4114496]
-    },
-    {
-      state: '2018-05-18',
-      stats: [2027307, 3277946, 1420518, 2454721, 7017731, 5656528, 2472223]
-    },
-    {
-      state: '2018-05-17',
-      stats: [1208495, 2141490, 1058031, 1999120, 5355235, 5120254, 2607672]
-    },
-    {
-      state: '2018-05-14',
-      stats: [1140516, 1938695, 925060, 1607297, 4782119, 4746856, 3187797]
-    }
-  ]
 
-  var ageNames = ['Total Commits', 'Total Pull Request', 'Reviewed Pull Request', 'State', 'Commits On master', 'Add', 'Add More']
-  var ids = ['Under 5 Years', '5 to 13 Years', '14 to 17 years', '18 to 24 years', '25 to 44 Years', '45 to 64 Years', '65 Years and Over']
+  var data = dynamicBarData()
+  var ageNames = ['Total Commits', 'Pull Requests', 'reviewed Pull Request', 'Build status']
+  var ids = ['comit', 'pull', 'revPull', 'stattte' ]
+
 
   // Let's populate the categoeries checkboxes
   d3.select('.categories').selectAll('.checkbox')
@@ -48,7 +32,7 @@ function dynamicChart () {
 
   // just a simple scale of colors
   var color = d3.scale.ordinal()
-    .range(['#98abc5', '#8a89a6', '#7b6888', '#6b486b', '#a05d56', '#d0743c', '#ff8c00'])
+    .range(['#E666B3', '#33991A', '#CC9999', '#B3B31A', '#00E680', '#FF1A66', '#E6331A', '#33FFCC', '#ff8c00'])
 
   //
   var xAxis = d3.svg.axis()
