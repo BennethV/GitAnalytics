@@ -13,6 +13,7 @@ $(document).ready(function () {
     plotTimeline()
 
     plotBar(contributionsPerSprint, getNames())
+    stackedBarDirtyData(dirtyData, getNames())
     var cardInfor = document.getElementById('3cards_template').innerHTML
     var popUpInfo = document.getElementById('specialPopup').innerHTML
     template = Handlebars.compile(cardInfor)
@@ -41,6 +42,7 @@ $(document).ready(function () {
     d3.selectAll('svg').remove()
     plotTimeline()
     plotBar(contributionsPerSprint, getNames())
+    stackedBarDirtyData(dirtyData, getNames())
     dynamicBarData()
     return false
   })
@@ -55,6 +57,7 @@ var branchLife = []
 var SprintLength = ''
 var startDate = ''
 var graphState = []
+var dirtyData = []
 // fetches the release information from github
 async function getReleases () {
   try {
@@ -78,7 +81,7 @@ const dateOfRelease = () => {
 function plotTimeline () {
   var day = 1000 * 60 * 60 * 24 // this gives a day in milliseconds
   var testData = cleanData()
-  const width = 850
+  const width = 1300
   var height = 350
   var lastDate = (releaseInfo.expreleaseDates).length - 1
   var endDay = ''
@@ -462,6 +465,156 @@ function plotBar (data, names) {
     .text('Number of line of code added vs release dates')
 }
 
+function stackedBarDirtyData (data, names) {
+  // console.log(data)
+  // console.log(names)
+//  console.log(data)
+  var margin = {top: 80, right: 160, bottom: 50, left: 70}
+  var width = 550 - margin.left - margin.right, height = 310 - margin.top - margin.bottom
+
+  var iDiv = document.createElement('div')
+  iDiv.className = 'main'
+  // iDiv.id = 'stacked1'
+  document.getElementsByTagName('body')[0].appendChild(iDiv)
+
+  var svg = d3.select('#stackedDirty')
+    .append('svg')
+    .attr('width', width + margin.left + margin.right)
+    .attr('height', height + margin.top + margin.bottom)
+    .append('g')
+    .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+
+  /* Data in strings like it would be if imported from a csv */
+  var parse = d3.time.format('%Y-%m-%d').parse
+  // Transpose the data into layers
+  var dataset = d3.layout.stack()(names.map(function (developer) {
+    return data.map(function (d) {
+      return {x: parse(d.year), y: +d[developer]}
+    })
+  }))
+
+  // Set x, y and colors
+  var x = d3.scale.ordinal()
+    .domain(dataset[0].map(function (d) { return d.x }))
+    .rangeRoundBands([10, width - 10], 0.02)
+
+  var y = d3.scale.linear()
+    .domain([0, d3.max(dataset, function (d) { return d3.max(d, function (d) { return d.y0 + d.y }) })])
+    .range([height, 0])
+
+  var colors = colorFunction()
+
+  // var colors = ['b33040', '#d25c4d', '#f2b447', '#d9d574']
+
+  // Define and draw axes
+  var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient('left')
+    .ticks(10)
+    .tickSize(-width, 0, 0)
+    .tickFormat(function (d) { return d })
+
+  var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient('bottom')
+    .tickFormat(d3.time.format('%Y-%m-%d'))
+
+  svg.append('g')
+    .attr('class', 'y axis')
+    .call(yAxis)
+
+  svg.append('g')
+    .attr('class', 'x axis')
+    .attr('transform', 'translate(0,' + height + ')')
+    .call(xAxis)
+
+  // Create groups for each series, rects for each segment
+  var groups = svg.selectAll('g.cost')
+    .data(dataset)
+    .enter().append('g')
+    .attr('class', 'cost')
+    .style('fill', function (d, i) { return colors[i] })
+
+  var rect = groups.selectAll('rect')
+    .data(function (d) { return d })
+    .enter()
+    .append('rect')
+    .attr('x', function (d) { return x(d.x) })
+    .attr('y', function (d) {
+      return y(d.y0 + d.y)
+    })
+    .attr('height', function (d) { return y(d.y0) - y(d.y0 + d.y) })
+    .attr('width', x.rangeBand())
+    .on('mouseover', function () { tooltip.style('display', null) })
+    .on('mouseout', function () { tooltip.style('display', 'none') })
+    .on('mousemove', function (d) {
+      var xPosition = d3.mouse(this)[0] - 15
+      var yPosition = d3.mouse(this)[1] - 25
+      tooltip.attr('transform', 'translate(' + xPosition + ',' + yPosition + ')')
+      tooltip.select('text').text(d.y)
+    })
+
+  // Draw legend
+  var legend = svg.selectAll('.legend')
+    .data(names)
+    .enter().append('g')
+    .attr('class', 'legend')
+    .attr('transform', function (d, i) { return 'translate(30,' + i * 19 + ')' })
+
+  legend.append('rect')
+    .attr('x', width - 18)
+    .attr('width', 18)
+    .attr('height', 18)
+    .style('fill', function (d, i) { return colors.slice()[i] })
+
+  legend.append('text')
+    .attr('x', width + 5)
+    .attr('y', 9)
+    .attr('dy', '.35em')
+    .style('text-anchor', 'start')
+    .text(function (d, i) {
+      return names[i]
+    })
+
+  // Prep the tooltip bits, initial display is hidden
+  var tooltip = svg.append('g')
+    .attr('class', 'tooltip')
+    .style('display', 'none')
+
+  tooltip.append('rect')
+    .attr('width', 30)
+    .attr('height', 20)
+    .attr('fill', 'white')
+    .style('opacity', 0.5)
+
+  tooltip.append('text')
+    .attr('x', 15)
+    .attr('dy', '1.2em')
+    .style('text-anchor', 'middle')
+    .attr('font-size', '12px')
+    .attr('font-weight', 'bold')
+
+  svg.append('text')
+    .attr('transform', 'rotate(-90)')
+    .attr('y', 0 - margin.left)
+    .attr('x', 0 - (height / 2))
+    .attr('dy', '1em')
+    .style('text-anchor', 'middle')
+    .text('Number of lines added')
+    // text label for the x axis
+  svg.append('text')
+    .attr('transform', 'translate(' + (width / 2) + ' ,' + (height + 20 + 20) + ')')
+    .style('text-anchor', 'middle')
+    .text('Release Dates')
+  svg.append('text')
+    .attr('x', (width / 2))
+    .attr('y', 0 - (margin.top / 2))
+    .attr('text-anchor', 'middle')
+    .style('font-size', '20px')
+    .style('text-decoration', 'underline')
+    .text('Number of line of code added vs release dates')
+}
+
 // ploting for the overview page
 function stackedBarOverview (data, names) {
   // console.log(data)
@@ -606,16 +759,7 @@ function stackedBarOverview (data, names) {
 }
 
 function colorFunction () {
-  var colorArray = ['#99E6E6', '#CC9999', '#FF33FF', '#FFFF99', '#00B3E6',
-    '#E6B333', '#3366E6', '#999966', '#99FF99', '#B34D4D',
-    '#80B300', '#809900', '#E6B3B3', '#6680B3', '#66991A',
-    '#FF99E6', '#CCFF1A', '#FF1A66', '#E6331A', '#33FFCC',
-    '#66994D', '#B366CC', '#4D8000', '#B33300', '#CC80CC',
-    '#66664D', '#991AFF', '#E666FF', '#4DB3FF', '#1AB399',
-    '#E666B3', '#33991A', '#CC9999', '#B3B31A', '#00E680',
-    '#4D8066', '#809980', '#E6FF80', '#1AFF33', '#999933',
-    '#FF3380', '#CCCC00', '#66E64D', '#4D80CC', '#9900B3',
-    '#E64D66', '#4DB380', '#FF4D4D', '#99E6E6', '#6666FF']
+  var colorArray = ['#3366cc', '#dc3912', '#ff9900', '#109618', '#990099', '#0099c6', '#dd4477', '#66aa00', '#b82e2e', '#316395', '#994499', '#22aa99', '#aaaa11', '#6633cc', '#e67300', '#8b0707', '#651067', '#329262', '#5574a6', '#3b3eac']
   return colorArray
 };
 /*
@@ -635,10 +779,12 @@ function pullDetails () {
     var additions = 0
     var deletions = 0
     var nodeAdds = 0
+    var unfilteredAdds = 0
     var nodeDeletion = 0
     for (var j = 0; j < pullInfo[i].length; j++) {
       var filename = ((pullInfo[i])[j]).filename
       filename = filename.substring(0, 12)
+      unfilteredAdds += ((pullInfo[i])[j]).additions
       if (filename !== 'node_modules') {
         additions += ((pullInfo[i])[j]).additions
         deletions += ((pullInfo[i])[j]).deletions
@@ -650,9 +796,10 @@ function pullDetails () {
     (summary[i]).additions = additions;
     (summary[i]).normal_Delitions = deletions;
     (summary[i]).node_Additions = nodeAdds;
-    (summary[i]).node_Deletions = nodeDeletion
+    (summary[i]).node_Deletions = nodeDeletion;
+    (summary[i]).all_Additions = unfilteredAdds
   }
-
+  console.log(summary)
   stackeBarData()
   console.log(contributionsPerSprint)
   // console.log(summary)
@@ -661,17 +808,22 @@ function pullDetails () {
 }
 
 function stackeBarData () {
-  console.log('stacked bar data start')
+//  console.log('stacked bar data start')
   releaseDates = releaseInfo.actualreleaseDates
   var data = []
+
   const names = getNames()
-  console.log(releaseDates)
+  // console.log(releaseDates)
+  console.log(names)
   for (var i = 0; i < releaseDates.length - 1; i++) {
     var obj = {}
+    var obj2 = {}
     for (var j = 0; j < names.length; j++) {
       obj[names[j]] = 0
+      obj2[names[j]] = 0
     }
     data[i] = obj
+    dirtyData[i] = obj2
     // console.log(data[i])
   }
   // console.log(data)
@@ -680,16 +832,18 @@ function stackeBarData () {
   console.log(summary)
   for (var i = 0; i < summary.length; i++) {
     var index = ((summary[i]).release_id - 1);
-    (data[index])[(summary[i]).User] += (summary[i]).additions
-    console.log(data[index])
-    var yr = releaseDates[((summary[i]).release_id)]
-    console.log(yr);
-    (data[((summary[i]).release_id - 1)])['year'] = convertTimestamp(yr)
+    (data[index])[(summary[i]).User] += (summary[i]).additions;
+    (dirtyData[index])[(summary[i]).User] += (summary[i]).all_Additions
+    // console.log(data[index])
+    var yr = releaseDates[((summary[i]).release_id)];
+    // console.log(yr);
+    (data[((summary[i]).release_id - 1)])['year'] = convertTimestamp(yr);
+    (dirtyData[((summary[i]).release_id - 1)])['year'] = convertTimestamp(yr)
   }
-  console.log(data)
   contributionsPerSprint = data
-  // console.log(data)
-  console.log('stacked bar data end')
+  console.log(data)
+  console.log('this is dirty data')
+  console.log(dirtyData)
   return data
 }
 
