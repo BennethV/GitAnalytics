@@ -26,7 +26,6 @@ var userInfo = {};
   // document.getElementById('loader').style.display = 'block'
 
   var rep = await urlParam('repository')
-  console.log(urlParam('repository'))
   await fetch('http://127.0.0.1:3000/javascripts/data.json')
     .then((res) => res.text())
     .then(async function (data) {
@@ -208,8 +207,7 @@ var userInfo = {};
 
         // generate release id and developer pull request per release
         await mergedPullPerDev()
-        // console.log(branches[23].commitData)
-        console.log(summary)
+
         // this function plots the bar graphs under sprints
         await pullDetails()
         console.log('Done fetching all the information')
@@ -231,7 +229,7 @@ function urlParam (name) {
 // href functions
 $(document).ready(function () {
   $('#frontOverview').on('click', 'a', function () {
-    console.log($(this).text())
+    // console.log($(this).text())
     userInfo.repository = $(this).text()
     window.location.href = `/charts?repository=${userInfo.repository}`
     return false
@@ -410,35 +408,38 @@ $(document).ready(function () {
       'column': ['Release', 'Total Pull Requests', 'Developer Pull Requests'],
       'div': '#closedPullsPerDevTable'
     })
-    var pieData = []
-    pieData.push({
-      'data': contributorMergedPullReq,
-      'div': '#mergedPie'
-    })
-    pieData.push({
-      'data': contributorClosedPullReq,
-      'div': '#closedPie'
-    })
+
     // clear all svg's and tables
     d3.selectAll('svg').remove()
     d3.selectAll('table').remove()
-    for (let i = 0; i < tableData.length; i++) {
-      await genPieChart(pieData[i], tableData[i])
+    console.log(mergedPullPerDev())
+    console.log(releases)
+    var freqData = []
+    var releaseArray = []
+    var info = mergedPullPerDev()
+    for (let t = 0; t < info.length; t++) {
+      var releaseData = info[t].release
+      var obj = {}
+      var total = 0
+      for (let f = 0; f < releaseData.length; f++) {
+        obj['release' + releaseData[f].number] = releaseData[f].pulls
+        total += releaseData[f].pulls
+      }
+      freqData.push({
+        State: info[t].name,
+        freq: obj,
+        total: total
+      })
     }
-
-    dynamicChart()
-
-    var freqData = [
-      {State: 'DEV_A', freq: {release1: 6, release2: 10, release3: 4}},
-      {State: 'DEV_B', freq: {release1: 2, release2: 3, release3: 4}},
-      {State: 'DEV_C', freq: {release1: 1, release2: 1, release3: 3}},
-      {State: 'DEV_D', freq: {release1: 5, release2: 3, release3: 1}},
-      {State: 'DEV_E', freq: {release1: 2, release2: 1, release3: 1}}
-
-    ]
-
-    dashboard('#dashboard', freqData)
-
+    for (let r = 0; r < releases.length; r++) {
+      releaseArray.push('release' + (r + 1))
+    }
+    console.log(freqData)
+    console.log(releaseArray)
+    dashboard('#dashboard', freqData, releaseArray)
+    for (let i = 0; i < tableData.length; i++) {
+      await tabulate(tableData[i].data, tableData[i].column, tableData[i].div)
+    }
     return false
   })
 })
@@ -628,77 +629,7 @@ function closedPullPerDev () {
   }
   return closedDevReleases
 }
-function genPieChart (pieData, tableData) {
-  var data = pieData.data
-  var div = pieData.div
-  var pie = d3.layout.pie()
-    .value(function (d) { return d.pulls })
-    .sort(null)
 
-  var w = 300
-  var h = 300
-
-  var outerRadius = (w - 2) / 2
-
-  var color = d3.scale.category10()
-  // .range(['#4daf4a','#377eb8','#ff7f00','#984ea3','#e41a1c']);
-
-  var arc = d3.svg.arc()
-    .innerRadius(0)
-    .outerRadius(outerRadius)
-
-  var svg = d3.select(div)
-    .append('svg')
-    .attr({
-      width: w,
-      height: h,
-      class: 'shadow'
-    }).append('g')
-    .attr({
-      transform: 'translate(' + w / 2 + ',' + h / 2 + ')'
-    })
-
-  var path = svg.selectAll('path')
-    .data(pie(data))
-    .enter()
-    .append('path')
-    .attr({
-      d: arc,
-      fill: function (d, i) {
-        return color(i)
-      }
-    })
-    .style({
-      'fill-opacity': 0.15,
-      stroke: function (d, i) {
-        return color(i)
-      },
-      'stroke-width': '2px'
-    })
-
-  var text = svg.selectAll('text')
-    .data(pie(data))
-    .enter()
-    .append('text')
-    .attr('transform', function (d) {
-      return 'translate(' + arc.centroid(d) + ')'
-    })
-
-    .attr('text-anchor', 'middle')
-    .text(function (d) {
-      return d.data.name + ' (' + d.data.pulls + ')'
-    })
-    .style({
-      fill: function (d, i) {
-        return color(i)
-      },
-      'font-size': '18px'
-
-    })
-
-    // gen table
-  tabulate(tableData.data, tableData.column, tableData.div)
-}
 function genSummaryTable (data) {
   d3.selectAll('table').remove()
   d3.selectAll('svg').remove()
@@ -770,19 +701,29 @@ function getReleaseDateForPie (releases) {
   }
   return (releaseInfo).actualreleaseDates
 }
-function dashboard (id, fData) {
+function dashboard (id, fData, releaseArray) {
   var barColor = 'steelblue'
   // Assign colours for each of the pie segments
-  function segColor (c) { return {release1: '#807dba', release2: '#e08214', release3: '#41ab5d'}[c] }
+  function color_google (n) {
+    var colores_g = ['#3366cc', '#dc3912', '#ff9900', '#109618', '#990099', '#0099c6', '#dd4477', '#66aa00', '#b82e2e', '#316395', '#994499', '#22aa99', '#aaaa11', '#6633cc', '#e67300', '#8b0707', '#651067', '#329262', '#5574a6', '#3b3eac']
+    return colores_g[n % colores_g.length]
+  }
+  // Assign colours for each of the pie segments
+  function segColor (c) {
+    var obj = {}
+    for (var i = 0; i < releaseArray.length; i++) {
+      obj[releaseArray[i]] = color_google(i)
+    }
+    return obj[c]
+  }
 
-  // compute total for each state.
-  fData.forEach(function (d) { d.total = d.freq.release1 + d.freq.release2 + d.freq.release3 })
+  // compute total for each state.@@@@@ you removed code
 
   // function to handle histogram.
   function histoGram (fD) {
     var hG = {}, hGDim = {t: 60, r: 0, b: 30, l: 0}
-    hGDim.w = 500 - hGDim.l - hGDim.r,
-    hGDim.h = 300 - hGDim.t - hGDim.b
+    hGDim.w = 600 - hGDim.l - hGDim.r,
+    hGDim.h = 400 - hGDim.t - hGDim.b
 
     // create svg for histogram.
     var hGsvg = d3.select(id).append('svg')
@@ -790,6 +731,13 @@ function dashboard (id, fData) {
       .attr('height', hGDim.h + hGDim.t + hGDim.b).append('g')
       .attr('transform', 'translate(' + hGDim.l + ',' + hGDim.t + ')')
 
+    hGsvg.append('text')
+      .attr('x', (hGDim.w / 2))
+      .attr('y', 0 - (hGDim.t / 2))
+      .attr('text-anchor', 'middle')
+      .style('font-size', '16px')
+      .style('text-decoration', 'underline')
+      .text('Pull Requests Per Developer')
       // create function for x-axis mapping.
     var x = d3.scale.ordinal().rangeRoundBands([0, hGDim.w], 0.1)
       .domain(fD.map(function (d) { return d[0] }))
@@ -797,6 +745,7 @@ function dashboard (id, fData) {
       // Add x-axis to the histogram svg.
     hGsvg.append('g').attr('class', 'x axis')
       .attr('transform', 'translate(0,' + hGDim.h + ')')
+      .style('font-size', '16px')
       .call(d3.svg.axis().scale(x).orient('bottom'))
 
       // Create function for y-axis map.
@@ -863,7 +812,8 @@ function dashboard (id, fData) {
 
   // function to handle pieChart.
   function pieChart (pD) {
-    var pC = {}, pieDim = {w: 250, h: 250}
+    var pC = {}, pieDim = {w: 350, h: 350}
+
     pieDim.r = Math.min(pieDim.w, pieDim.h) / 2
 
     // create svg for pie chart.
@@ -878,9 +828,17 @@ function dashboard (id, fData) {
     var pie = d3.layout.pie().sort(null).value(function (d) { return d.freq })
 
     // Draw the pie slices.
-    piesvg.selectAll('path').data(pie(pD)).enter().append('path').attr('d', arc)
+
+    piesvg.selectAll('path')
+      .data(pie(pD))
+      .enter()
+      .append('path')
+      .attr('d', arc)
+
       .each(function (d) { this._current = d })
-      .style('fill', function (d) { return segColor(d.data.type) })
+      .style('fill', function (d) {
+        return segColor(d.data.type)
+      })
       .on('mouseover', mouseover).on('mouseout', mouseout)
 
       // create function to update pie-chart. This will be used by histogram.
@@ -958,7 +916,8 @@ function dashboard (id, fData) {
   }
 
   // calculate total frequency by segment for all state.
-  var tF = ['release1', 'release2', 'release3'].map(function (d) {
+
+  var tF = releaseArray.map(function (d) {
     return {type: d, freq: d3.sum(fData.map(function (t) { return t.freq[d] }))}
   })
 

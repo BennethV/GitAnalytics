@@ -64,7 +64,6 @@ async function getReleases () {
     const res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/releases?access_token=${userInfo.accessToken}`)
     const rawReleaseInfo = await res.json()
     rawReleaseData = rawReleaseInfo
-    console.log(rawReleaseData)
     getReleaseDates()
   } catch (err) { console.log(err) }
 }
@@ -113,8 +112,6 @@ function plotTimeline () {
         const relDetails = releaseDetais(i)
 
         var devNames = getNames()
-        console.log(devNames)
-        console.log(contributionsPerSprint)
         var sprintBarInfo = sprintBarData(devNames, contributionsPerSprint, i)
 
         if ((sprintBarInfo.length !== 0)) {
@@ -180,7 +177,6 @@ function noOfDays (date1, date2) {
 // modifies data to be in a supported formate for timeline plot
 function cleanData () {
   var releaseTime = []
-  console.log(releaseInfo)
   getexpReleaseDates()
 
   const currentData = releaseInfo
@@ -207,7 +203,6 @@ function cleanData () {
 // gives the expected release Dates
 function getexpReleaseDates () {
   const day = 1000 * 60 * 60 * 24
-  // console.log(releaseInfo)
   var daysElapsed = releaseInfo.daysElapsed
 
   var noOfReleases = releaseInfo.actualreleaseDates.length
@@ -222,7 +217,6 @@ function getexpReleaseDates () {
 // sends details to the html file
 function releaseDetais (i) {
   const day = 1000 * 60 * 60 * 24
-  // console.log(releaseInfo)
   var releaser = (releaseInfo.releaser)[i]
   var releaseDate = convertTimestamp(releaseInfo.actualreleaseDates[i + 1])
 
@@ -316,12 +310,9 @@ function convertTimestamp (timestamp) {
 // Setup svg using Bostock's margin convention
 
 function plotBar (data, names) {
-  // console.log(data)
-  // console.log(names)
-//  console.log(data)
   var margin = {top: 80, right: 160, bottom: 50, left: 70}
-  var width = 550 - margin.left - margin.right, height = 310 - margin.top - margin.bottom
-
+  var width = 550 - margin.left - margin.right
+  var height = 310 - margin.top - margin.bottom
   var iDiv = document.createElement('div')
   iDiv.className = 'main'
   // iDiv.id = 'stacked1'
@@ -617,14 +608,11 @@ function stackedBarDirtyData (data, names) {
 
 // ploting for the overview page
 function stackedBarOverview (data, names) {
-  // console.log(data)
-  // console.log(names)
-//  console.log(data)
   d3.selectAll('table').remove()
   d3.selectAll('svg').remove()
   var margin = {top: 80, right: 160, bottom: 90, left: 70}
-  var width = 550 - margin.left - margin.right,
-    height = 350 - margin.top - margin.bottom
+  var width = 550 - margin.left - margin.right
+  var height = 350 - margin.top - margin.bottom
 
   var svg = d3.select('#barGraph')
     .append('svg')
@@ -652,8 +640,6 @@ function stackedBarOverview (data, names) {
     .range([height, 0])
 
   var colors = colorFunction()
-  console.log(colors)
-
   // var colors = ['b33040', '#d25c4d', '#f2b447', '#d9d574']
 
   // Define and draw axes
@@ -801,10 +787,6 @@ function pullDetails () {
   }
   console.log(summary)
   stackeBarData()
-  console.log(contributionsPerSprint)
-  // console.log(summary)
-  // console.log(branches)
-  // getBranchLife()
 }
 
 function stackeBarData () {
@@ -813,8 +795,7 @@ function stackeBarData () {
   var data = []
 
   const names = getNames()
-  // console.log(releaseDates)
-  console.log(names)
+
   for (var i = 0; i < releaseDates.length - 1; i++) {
     var obj = {}
     var obj2 = {}
@@ -825,13 +806,11 @@ function stackeBarData () {
     data[i] = obj
     dirtyData[i] = obj2
     // console.log(data[i])
-  }
-  // console.log(data)
 
-  // console.log(summary)
-  console.log(summary)
+
   for (var i = 0; i < summary.length; i++) {
     var index = ((summary[i]).release_id - 1);
+
     (data[index])[(summary[i]).User] += (summary[i]).additions;
     (dirtyData[index])[(summary[i]).User] += (summary[i]).all_Additions
     // console.log(data[index])
@@ -844,6 +823,7 @@ function stackeBarData () {
   console.log(data)
   console.log('this is dirty data')
   console.log(dirtyData)
+
   return data
 }
 
@@ -877,10 +857,6 @@ function sprintBar (barData, tableData, i) {
   var data = barData
   d3.select('#individualTable').remove()
   d3.select('#individualBar').remove()
-  // d3.select('#stacked1').remove()
-  // justTesting
-  // class = "column"
-  // console.log(data)
   var barId = 'individualBar'
   var tableId = 'individualTable'
   var iDiv = document.createElement('div')
@@ -991,8 +967,6 @@ function sprintBar (barData, tableData, i) {
 }
 
 function sprintBarData (names, devContributions, index) {
-  console.log(names)
-  console.log(devContributions)
   var cleanSprintData = []
   for (var i = 0; i < names.length; i++) {
     cleanSprintData[i] = {'Letter': names[i],
@@ -1017,9 +991,6 @@ function dynamicBarData () {
     numberOfDates[i] = ((summary[i].Merge_Date).substring(0, 10))
   }
   numberOfDates.removeDuplicates()
-
-  console.log(numberOfDates)
-
   for (var i = 0; i < numberOfDates.length; i++) {
     var overalCommits = 0
     var overallPullReq = 0
@@ -1027,7 +998,6 @@ function dynamicBarData () {
     var buildStatus = 0 // will finish with this
     for (var j = 0; j < summary.length; j++) {
       if (numberOfDates[i] === (summary[j].Merge_Date.substring(0, 10))) {
-        console.log(summary[j].Total_Commits)
         overalCommits += summary[j].Total_Commits
         overallPullReq++
       }
@@ -1045,7 +1015,6 @@ function dynamicBarData () {
       'stats': stats }
   }
 
-  console.log(dynamicGraphData)
   return dynamicGraphData
 }
 
