@@ -317,15 +317,7 @@ function plotBar (data, names) {
   // console.log(names)
 //  console.log(data)
   var margin = {top: 80, right: 160, bottom: 50, left: 70}
-  var width = 550 - margin.left - margin.right,
-<<<<<<< Updated upstream
-    height = 310 - margin.top - margin.bottom
-=======
-    height = 350 - margin.top - margin.bottom
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+  var width = 550 - margin.left - margin.right, height = 310 - margin.top - margin.bottom
 
   var iDiv = document.createElement('div')
   iDiv.className = 'main'
