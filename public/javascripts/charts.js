@@ -26,7 +26,6 @@ var userInfo = {};
   // document.getElementById('loader').style.display = 'block'
 
   var rep = await urlParam('repository')
-  console.log(urlParam('repository'))
   await fetch('http://127.0.0.1:3000/javascripts/data.json')
     .then((res) => res.text())
     .then(async function (data) {
@@ -207,8 +206,7 @@ var userInfo = {};
 
         // generate release id and developer pull request per release
         await mergedPullPerDev()
-        // console.log(branches[23].commitData)
-        console.log(summary)
+
         // this function plots the bar graphs under sprints
         await pullDetails()
         console.log('Done fetching all the information')
@@ -230,7 +228,7 @@ function urlParam (name) {
 // href functions
 $(document).ready(function () {
   $('#frontOverview').on('click', 'a', function () {
-    console.log($(this).text())
+    // console.log($(this).text())
     userInfo.repository = $(this).text()
     window.location.href = `/charts?repository=${userInfo.repository}`
     return false
@@ -395,7 +393,6 @@ $(document).ready(function () {
     document.getElementById('dynamicBarGraph').innerHTML = null
     document.getElementById('cards').innerHTML = infoCards
 
-
     // await genPieChart(contributorClosedPullReq, '#closedPie')
     // generate statistics for developer pull request table for every release
     var tableData = []
@@ -410,35 +407,38 @@ $(document).ready(function () {
       'column': ['Release', 'Total Pull Requests', 'Developer Pull Requests'],
       'div': '#closedPullsPerDevTable'
     })
-    var pieData = []
-    pieData.push({
-      'data': contributorMergedPullReq,
-      'div': '#mergedPie'
-    })
-    pieData.push({
-      'data': contributorClosedPullReq,
-      'div': '#closedPie'
-    })
+
     // clear all svg's and tables
     d3.selectAll('svg').remove()
     d3.selectAll('table').remove()
-    for (let i = 0; i < tableData.length; i++) {
-      await genPieChart(pieData[i], tableData[i])
+console.log(mergedPullPerDev())
+console.log(releases)
+    var freqData = []
+    var releaseArray = []
+    var info =mergedPullPerDev()
+    for (let t = 0; t < info.length; t++) {
+      var releaseData = info[t].release
+      var obj ={}
+      var total = 0
+      for (let f = 0; f < releaseData.length; f++) {
+        obj['release'+releaseData[f].number] = releaseData[f].pulls
+        total += releaseData[f].pulls
+      }
+      freqData.push({
+        State: info[t].name,
+        freq: obj,
+        total: total
+      })
     }
-
-    dynamicChart()
-
-    var freqData = [
-      {State: 'DEV_A', freq: {release1: 6, release2: 10, release3: 4}},
-       {State: 'DEV_B', freq: {release1: 2, release2: 3, release3: 4}},
-       {State: 'DEV_C', freq: {release1: 1, release2: 1, release3: 3}},
-       {State: 'DEV_D', freq: {release1: 5, release2: 3, release3: 1}},
-       {State: 'DEV_E', freq: {release1: 2, release2: 1, release3: 1}}
-
-    ]
-      
-      dashboard('#dashboard', freqData)
-
+    for (let r = 0; r < releases.length; r++) {
+      releaseArray.push('release' + (r+1))      
+    }
+    console.log(freqData)
+    console.log(releaseArray)
+    dashboard('#dashboard', freqData, releaseArray)
+    for (let i = 0; i < tableData.length; i++) {
+      await tabulate(tableData[i].data, tableData[i].column, tableData[i].div)
+    }
     return false
   })
 })
@@ -628,77 +628,7 @@ function closedPullPerDev () {
   }
   return closedDevReleases
 }
-function genPieChart (pieData, tableData) {
-  var data = pieData.data
-  var div = pieData.div
-  var pie = d3.layout.pie()
-    .value(function (d) { return d.pulls })
-    .sort(null)
 
-  var w = 300
-  var h = 300
-
-  var outerRadius = (w - 2) / 2
-
-  var color = d3.scale.category10()
-  // .range(['#4daf4a','#377eb8','#ff7f00','#984ea3','#e41a1c']);
-
-  var arc = d3.svg.arc()
-    .innerRadius(0)
-    .outerRadius(outerRadius)
-
-  var svg = d3.select(div)
-    .append('svg')
-    .attr({
-      width: w,
-      height: h,
-      class: 'shadow'
-    }).append('g')
-    .attr({
-      transform: 'translate(' + w / 2 + ',' + h / 2 + ')'
-    })
-
-  var path = svg.selectAll('path')
-    .data(pie(data))
-    .enter()
-    .append('path')
-    .attr({
-      d: arc,
-      fill: function (d, i) {
-        return color(i)
-      }
-    })
-    .style({
-      'fill-opacity': 0.15,
-      stroke: function (d, i) {
-        return color(i)
-      },
-      'stroke-width': '2px'
-    })
-
-  var text = svg.selectAll('text')
-    .data(pie(data))
-    .enter()
-    .append('text')
-    .attr('transform', function (d) {
-      return 'translate(' + arc.centroid(d) + ')'
-    })
-
-    .attr('text-anchor', 'middle')
-    .text(function (d) {
-      return d.data.name + ' (' + d.data.pulls + ')'
-    })
-    .style({
-      fill: function (d, i) {
-        return color(i)
-      },
-      'font-size': '18px'
-
-    })
-
-    // gen table
-  tabulate(tableData.data, tableData.column, tableData.div)
-}
 function genSummaryTable (data) {
   d3.selectAll('table').remove()
   d3.selectAll('svg').remove()
@@ -770,45 +700,63 @@ function getReleaseDateForPie (releases) {
   }
   return (releaseInfo).actualreleaseDates
 }
-function dashboard (id, fData) {
+function dashboard (id, fData, releaseArray) {
   var barColor = 'steelblue'
   // Assign colours for each of the pie segments
-  function segColor (c) { return {release1: '#807dba', release2: '#e08214', release3: '#41ab5d'}[c] }
+  function color_google (n) {
+    var colores_g = ['#3366cc', '#dc3912', '#ff9900', '#109618', '#990099', '#0099c6', '#dd4477', '#66aa00', '#b82e2e', '#316395', '#994499', '#22aa99', '#aaaa11', '#6633cc', '#e67300', '#8b0707', '#651067', '#329262', '#5574a6', '#3b3eac']
+    return colores_g[n % colores_g.length]
+  }
+  // Assign colours for each of the pie segments
+  function segColor (c) {
+    var obj = {}
+    for (var i = 0; i < releaseArray.length; i++) {
+      obj[releaseArray[i]] = color_google(i)
+    }
+    return obj[c] 
+}
 
-  // compute total for each state.
-  fData.forEach(function (d) { d.total = d.freq.release1 + d.freq.release2 + d.freq.release3})
-  
+  // compute total for each state.@@@@@ you removed code
+
   // function to handle histogram.
   function histoGram (fD) {
     var hG = {}, hGDim = {t: 60, r: 0, b: 30, l: 0}
-      hGDim.w = 500 - hGDim.l - hGDim.r,
-    hGDim.h = 300 - hGDim.t - hGDim.b
-          
-      //create svg for histogram.
-      var hGsvg = d3.select(id).append('svg')
+    hGDim.w = 600 - hGDim.l - hGDim.r,
+    hGDim.h = 400 - hGDim.t - hGDim.b
+
+    // create svg for histogram.
+    var hGsvg = d3.select(id).append('svg')
       .attr('width', hGDim.w + hGDim.l + hGDim.r)
       .attr('height', hGDim.h + hGDim.t + hGDim.b).append('g')
       .attr('transform', 'translate(' + hGDim.l + ',' + hGDim.t + ')')
 
+    hGsvg.append('text')
+      .attr('x', (hGDim.w / 2))
+      .attr('y', 0 - (hGDim.t / 2))
+      .attr('text-anchor', 'middle')
+      .style('font-size', '16px')
+      .style('text-decoration', 'underline')
+      .text('Pull Requests Per Developer')
       // create function for x-axis mapping.
-      var x = d3.scale.ordinal().rangeRoundBands([0, hGDim.w], 0.1)
+    var x = d3.scale.ordinal().rangeRoundBands([0, hGDim.w], 0.1)
       .domain(fD.map(function (d) { return d[0] }))
 
       // Add x-axis to the histogram svg.
-      hGsvg.append('g').attr('class', 'x axis')
+    hGsvg.append('g').attr('class', 'x axis')
       .attr('transform', 'translate(0,' + hGDim.h + ')')
+      .style('font-size', '16px')
       .call(d3.svg.axis().scale(x).orient('bottom'))
 
       // Create function for y-axis map.
-      var y = d3.scale.linear().range([hGDim.h, 0])
+    var y = d3.scale.linear().range([hGDim.h, 0])
       .domain([0, d3.max(fD, function (d) { return d[1] })])
 
       // Create bars for histogram to contain rectangles and freq labels.
-      var bars = hGsvg.selectAll('.bar').data(fD).enter()
+    var bars = hGsvg.selectAll('.bar').data(fD).enter()
       .append('g').attr('class', 'bar')
-      
-      //create the rectangles.
-      bars.append('rect')
+
+      // create the rectangles.
+    bars.append('rect')
       .attr('x', function (d) { return x(d[0]) })
       .attr('y', function (d) { return y(d[1]) })
       .attr('width', x.rangeBand())
@@ -816,96 +764,105 @@ function dashboard (id, fData) {
       .attr('fill', barColor)
       .on('mouseover', mouseover)// mouseover is defined below.
       .on('mouseout', mouseout)// mouseout is defined below.
-          
-      //Create the frequency labels above the rectangles.
-      bars.append('text').text(function (d) { return d3.format(',')(d[1]) })
+
+      // Create the frequency labels above the rectangles.
+    bars.append('text').text(function (d) { return d3.format(',')(d[1]) })
       .attr('x', function (d) { return x(d[0]) + x.rangeBand() / 2 })
       .attr('y', function (d) { return y(d[1]) - 5 })
       .attr('text-anchor', 'middle')
-      
-      function mouseover (d) { // utility function to be called on mouseover.
+
+    function mouseover (d) { // utility function to be called on mouseover.
       // filter for selected state.
-      var st = fData.filter(function (s) { return s.State == d[0]})[0],
-        nD = d3.keys(st.freq).map(function (s) { return {type: s, freq: st.freq[s]}})
-             
-          // call update functions of pie-chart and legend.    
-          pC.update(nD)
-          leg.update(nD)
-      }
+      var st = fData.filter(function (s) { return s.State == d[0] })[0],
+        nD = d3.keys(st.freq).map(function (s) { return {type: s, freq: st.freq[s]} })
+
+      // call update functions of pie-chart and legend.
+      pC.update(nD)
+      leg.update(nD)
+    }
 
     function mouseout (d) { // utility function to be called on mouseout.
       // reset the pie-chart and legend.
       pC.update(tF)
-          leg.update(tF)
-      }
+      leg.update(tF)
+    }
 
     // create function to update the bars. This will be used by pie-chart.
     hG.update = function (nD, color) {
       // update the domain of the y-axis map to reflect change in frequencies.
       y.domain([0, d3.max(nD, function (d) { return d[1] })])
-          
-          // Attach the new data to the bars.
-          var bars = hGsvg.selectAll('.bar').data(nD)
-          
-          // transition the height and color of rectangles.
-          bars.select('rect').transition().duration(500)
+
+      // Attach the new data to the bars.
+      var bars = hGsvg.selectAll('.bar').data(nD)
+
+      // transition the height and color of rectangles.
+      bars.select('rect').transition().duration(500)
         .attr('y', function (d) { return y(d[1]) })
         .attr('height', function (d) { return hGDim.h - y(d[1]) })
         .attr('fill', color)
 
-          // transition the frequency labels location and change value.
-          bars.select('text').transition().duration(500)
+      // transition the frequency labels location and change value.
+      bars.select('text').transition().duration(500)
         .text(function (d) { return d3.format(',')(d[1]) })
-        .attr('y', function (d) { return y(d[1]) - 5 })            
-      }
+        .attr('y', function (d) { return y(d[1]) - 5 })
+    }
     return hG
   }
 
   // function to handle pieChart.
   function pieChart (pD) {
-    var pC = {}, pieDim = {w: 250, h: 250}
-      pieDim.r = Math.min(pieDim.w, pieDim.h) / 2
-              
-      // create svg for pie chart.
-      var piesvg = d3.select(id).append('svg')
+    var pC = {}, pieDim = {w: 350, h: 350}
+    pieDim.r = Math.min(pieDim.w, pieDim.h) / 2
+
+    // create svg for pie chart.
+    var piesvg = d3.select(id).append('svg')
       .attr('width', pieDim.w).attr('height', pieDim.h).append('g')
       .attr('transform', 'translate(' + pieDim.w / 2 + ',' + pieDim.h / 2 + ')')
-      
+
+
       // create function to draw the arcs of the pie slices.
-      var arc = d3.svg.arc().outerRadius(pieDim.r - 10).innerRadius(0)
+    var arc = d3.svg.arc().outerRadius(pieDim.r - 10).innerRadius(0)
 
-      // create a function to compute the pie slice angles.
-      var pie = d3.layout.pie().sort(null).value(function (d) { return d.freq })
+    // create a function to compute the pie slice angles.
+    var pie = d3.layout.pie().sort(null).value(function (d) { return d.freq })
 
-      // Draw the pie slices.
-      piesvg.selectAll('path').data(pie(pD)).enter().append('path').attr('d', arc)
+    // Draw the pie slices.
+    piesvg.selectAll('path')
+      .data(pie(pD))
+      .enter()
+      .append('path')
+      .attr('d', arc)
       .each(function (d) { this._current = d })
-      .style('fill', function (d) { return segColor(d.data.type) })
+      .style('fill', function (d) {
+        return segColor(d.data.type) 
+})
       .on('mouseover', mouseover).on('mouseout', mouseout)
 
       // create function to update pie-chart. This will be used by histogram.
-      pC.update = function (nD) {
+    pC.update = function (nD) {
       piesvg.selectAll('path').data(pie(nD)).transition().duration(500)
         .attrTween('d', arcTween)
-      }
+    }
     // Utility function to be called on mouseover a pie slice.
     function mouseover (d) {
       // call the update function of histogram with new data.
       hG.update(fData.map(function (v) {
-        return [v.State, v.freq[d.data.type]]}), segColor(d.data.type))
-      }
+        return [v.State, v.freq[d.data.type]]
+ }), segColor(d.data.type))
+    }
     // Utility function to be called on mouseout a pie slice.
     function mouseout (d) {
       // call the update function of histogram with all data.
       hG.update(fData.map(function (v) {
-        return [v.State, v.total]}), barColor)
-      }
+        return [v.State, v.total]
+ }), barColor)
+    }
     // Animating the pie-slice requiring a custom function which specifies
     // how the intermediate paths should be drawn.
     function arcTween (a) {
       var i = d3.interpolate(this._current, a)
-          this._current = i(0)
-          return function (t) { return arc(i(t))    };
+      this._current = i(0)
+      return function (t) { return arc(i(t)) }
     }
     return pC
   }
@@ -913,57 +870,57 @@ function dashboard (id, fData) {
   // function to handle legend.
   function legend (lD) {
     var leg = {}
-          
-      // create table for legend.
-      var legend = d3.select(id).append('table').attr('class', 'legend')
-      
-      // create one row per segment.
-      var tr = legend.append('tbody').selectAll('tr').data(lD).enter().append('tr')
-          
-      // create the first column for each segment.
-      tr.append('td').append('svg').attr('width', '16').attr('height', '16').append('rect')
+
+    // create table for legend.
+    var legend = d3.select(id).append('table').attr('class', 'legend')
+
+    // create one row per segment.
+    var tr = legend.append('tbody').selectAll('tr').data(lD).enter().append('tr')
+
+    // create the first column for each segment.
+    tr.append('td').append('svg').attr('width', '16').attr('height', '16').append('rect')
       .attr('width', '16').attr('height', '16')
       .attr('fill', function (d) { return segColor(d.type) })
-          
-      // create the second column for each segment.
-      tr.append('td').text(function (d) { return d.type})
 
-      // create the third column for each segment.
-      tr.append('td').attr('class', 'legendFreq')
-      .text(function (d) { return d3.format(',')(d.freq)})
+      // create the second column for each segment.
+    tr.append('td').text(function (d) { return d.type })
+
+    // create the third column for each segment.
+    tr.append('td').attr('class', 'legendFreq')
+      .text(function (d) { return d3.format(',')(d.freq) })
 
       // create the fourth column for each segment.
-      tr.append('td').attr('class', 'legendPerc')
-      .text(function (d) { return getLegend(d, lD)})
+    tr.append('td').attr('class', 'legendPerc')
+      .text(function (d) { return getLegend(d, lD) })
 
       // Utility function to be used to update the legend.
-      leg.update = function (nD) {
+    leg.update = function (nD) {
       // update the data attached to the row elements.
       var l = legend.select('tbody').selectAll('tr').data(nD)
 
-          // update the frequencies.
-          l.select('.legendFreq').text(function (d) { return d3.format(',')(d.freq)})
+      // update the frequencies.
+      l.select('.legendFreq').text(function (d) { return d3.format(',')(d.freq) })
 
-          // update the percentage column.
-          l.select('.legendPerc').text(function (d) { return getLegend(d, nD)})        
-      }
+      // update the percentage column.
+      l.select('.legendPerc').text(function (d) { return getLegend(d, nD) })
+    }
 
     function getLegend (d, aD) { // Utility function to compute percentage.
       return d3.format('%')(d.freq / d3.sum(aD.map(function (v) { return v.freq })))
-      }
+    }
 
     return leg
   }
 
   // calculate total frequency by segment for all state.
-  var tF = ['release1', 'release2', 'release3'].map(function (d) {
-    return {type: d, freq: d3.sum(fData.map(function (t) { return t.freq[d]}))} 
-  })    
-  
+  var tF = releaseArray.map(function (d) {
+    return {type: d, freq: d3.sum(fData.map(function (t) { return t.freq[d] }))}
+  })
+
   // calculate total frequency by state for all segment.
-  var sF = fData.map(function (d) { return [d.State, d.total]})
+  var sF = fData.map(function (d) { return [d.State, d.total] })
 
   var hG = histoGram(sF), // create the histogram.
     pC = pieChart(tF), // create the pie-chart.
-    leg = legend(tF)  // create the legend.
+    leg = legend(tF) // create the legend.
 }
