@@ -15,10 +15,12 @@ var repos = []
 var repoList = []
 var totalHealthyBuilds = 0
 var branches = []
-var totalCommits = 0
+var commitsPerContributor = []
+var comPerDev = []
 var statusOnMaster = ''
 var acquiredData = false
 var pullInfo = []
+var generalRepoData = []
 var userInfo = {};
 
 (async function () {
@@ -44,29 +46,29 @@ var userInfo = {};
         const userName = await res.json()
         userInfo.username = userName.login
         // fetches repo list from selected organisation
-        res = await fetch(`https://api.github.com/orgs/${userInfo.organisation}/repos?&access_token=${userInfo.accessToken}`)
+        res = await fetch(`https://api.github.com/orgs/${userInfo.organisation}/repos?per_page=250&access_token=${userInfo.accessToken}`)
         repos = await res.json()
         // repository pulls
-        res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/pulls?state=closed&access_token=${userInfo.accessToken}`)
+        res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/pulls?per_page=250&state=closed&access_token=${userInfo.accessToken}`)
 
         closedPulls = await res.json()
-        res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/contributors?access_token=${userInfo.accessToken}`)
+        res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/contributors?per_page=250&access_token=${userInfo.accessToken}`)
         contributors = await res.json()
         // fetch release information
-        res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/releases?access_token=${userInfo.accessToken}`)
+        res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/releases?per_page=250&access_token=${userInfo.accessToken}`)
         releases = getReleaseDateForPie(await res.json())
         // Fetch all the commits of the repo
         res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/commits?per_page=250&access_token=${userInfo.accessToken}`)
         commits = await res.json()
-        totalCommits = commits.length
-
+        res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}?access_token=${userInfo.accessToken}`)
+        generalRepoData = await res.json()
         // fectch branch information
-        res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/branches?access_token=${userInfo.accessToken}`)
+        res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/branches?per_page=250&access_token=${userInfo.accessToken}`)
         branches = await res.json()
         for (let p = 0; p < branches.length; p++) {
-          var statusData = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/statuses/${branches[p].commit.sha}?access_token=${userInfo.accessToken}`);
+          var statusData = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/statuses/${branches[p].commit.sha}?per_page=250&access_token=${userInfo.accessToken}`);
           (branches[p])['statusData'] = await statusData.json()
-          var commitData = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/commits?per_page=200&sha=${branches[p].commit.sha}&access_token=${userInfo.accessToken}`);
+          var commitData = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/commits?per_page=250&sha=${branches[p].commit.sha}&access_token=${userInfo.accessToken}`);
           (branches[p])['commitData'] = await commitData.json()
         }
 
@@ -87,16 +89,24 @@ var userInfo = {};
             'name': contributors[d].login,
             'pulls': 0
           }
+          res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/commits?author=${ contributors[d].login}&per_page=250&access_token=${userInfo.accessToken}`)
+          var array = await res.json()
+          commitsPerContributor.push({
+            'name': contributors[d].login,
+            commits: array
+          })
         }
+        console.log(commitsPerContributor)
         // loop through closed pull requests
         // fetches the all the commits per pull request and the reviews
         // This will invert the data
-        count = 0
-        for (var z = (closedPulls).length - 1; z >= 0; z--) {
-          res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/pulls/${closedPulls[z].number}/reviews?state=all&access_token=${userInfo.accessToken}`)
-          reviews[count] = await res.json()
-          count++
-        }
+        // count = 0
+        // for (var z = (closedPulls).length - 1; z >= 0; z--) {
+
+        //   res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/pulls/${closedPulls[z].number}/reviews?state=all&access_token=${userInfo.accessToken}`)
+        //   reviews[count] = await res.json()
+        //   count++
+        // }
         // This will invert the data
         count = 0
         for (var i = (closedPulls).length - 1; i >= 0; i--) {
@@ -116,6 +126,8 @@ var userInfo = {};
           // populates the merged pull request object called 'summary'
           var mergeDate = 0
           if ((closedPulls[i].merged_at !== null) && (closedPulls[i].base.ref === 'master')) {
+            res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/pulls/${closedPulls[i].number}/reviews?per_page=250&state=all&access_token=${userInfo.accessToken}`)
+            reviews.push(await res.json())
             mergeDate = closedPulls[i].merged_at
             summary.push({
               'Pull_Request': closedPulls[i].number,
@@ -133,24 +145,29 @@ var userInfo = {};
           }
           count++
         } // closedPulls loop ends here
-        // This will invert the data
-        count = 0
         // populating pull request review objects
-        for (var q = reviews.length - 1; q >= 0; q--) {
+        for (var q = 0 ; q < reviews.length; q++) {
           // if the code was reviewed
           if (typeof (reviews[q]).length !== 'undefined' && (reviews[q]).length > 0) {
-            for (var k = 0; k < (reviews[q]).length; ++k) {
-              pullReview[count] = {
-                'Pull Request': closedPulls[q].number,
-                'Reviewer': ((reviews[q])[k]).user.login,
-                'Reviewee': closedPulls[q].user.login,
-                'Date': ((reviews[q])[k]).submitted_at,
-                'Status': ((reviews[q])[k]).state,
-                'Review Message': ((reviews[q])[k]).body
-              }
+            var reviewer = ''
+            var date = ''
+            var status = ''
+            var revMessage = ''
 
-              count++
+            for (var k = 0; k < (reviews[q]).length; ++k) {
+              reviewer = ((reviews[q])[k]).user.login
+              date = ((reviews[q])[k]).submitted_at
+              status += ((reviews[q])[k]).state + '|==> '
+              revMessage += ((reviews[q])[k]).body + '|==> '
             }
+            pullReview.push({
+              'Pull Request': summary[q].Pull_Request,
+              'Reviewer': reviewer,
+              'Reviewee': closedPulls[q].user.login,
+              'Date': date,
+              'Status': status,
+              'Review Message': revMessage
+            })
           } else {
             // if not reviewed
           }
@@ -254,16 +271,19 @@ $(document).ready(function () {
     var overviewData = template({
       title: 'welcome to ' + userInfo.repository + ' Repository Statistics',
       NumberOfSprint: sprintNumber,
-      totalCommits: totalCommits,
+      totalCommits: totalCommits(),
       repos: repoList,
       statusOnMaster: statusOnMaster,
-      names: names
+      names: names,
+      language:generalRepoData.language,
+      tbdScore: tbdScore()
     })
     document.getElementById('frontOverview').innerHTML = overviewData
     d3.selectAll('table').remove()
     d3.selectAll('svg').remove()
-    stackedBarOverview(contributionsPerSprint, getNames())
     overviewPie()
+    stackedBarOverview( contributionsPerSprint, getNames())
+
     return false
   })
 
@@ -288,7 +308,7 @@ $(document).ready(function () {
       card2: 'Merged Pulls:',
       text2: summary.length,
       card3: 'Total Commits:',
-      text3: totalCommits,
+      text3: totalCommits(),
       card4: 'Healthy Builds',
       text4: totalHealthyBuilds + '/' + summary.length
     })
@@ -335,30 +355,61 @@ $(document).ready(function () {
     dynamicChart()
     return false
   })
-  $('#pullCommits').click(async function () {
+  $('#commitsPerDev').click(async function () {
     document.getElementById('body').style.backgroundColor = 'white'
     var tableInfor = document.getElementById('table_heading_template').innerHTML
     var template = Handlebars.compile(tableInfor)
-    var info = template({
-      title: 'Pull Request Reviews'
+    var commitsInfo = template({
+      title: 'Commits Per Developer',
+      description:'The histogram shows the total commits made by each developer. '+
+                'The pie chart shows the contribution of commits per release.'
     })
-    document.getElementById('theading').innerHTML = info
-    var cardInfor = document.getElementById('3cards_template').innerHTML
+    document.getElementById('theading').innerHTML = commitsInfo
+    var cardInfor = document.getElementById('cards_template').innerHTML
     template = Handlebars.compile(cardInfor)
     var infoCards = template({
       card1: 'Total Commits',
-      text1: totalCommits,
-      card2: 'Closed Pulls Analytics',
-      card3: 'Closed Pulls Analytics',
-      card4: 'Closed Pulls Analytics'
+      text1: totalCommits(),
+      card2: 'Total Merged Pulls',
+      text2: summary.length,
+      card3: 'Total Releases',
+      text3: releases.length,
+      card4: 'Average Commits Per Developer',
+      text4: averageCommits()
     })
     document.getElementById('frontOverview').innerHTML = null
-    document.getElementById('cards').innerHTML = null
+    document.getElementById('3cards').innerHTML = null
     document.getElementById('defaulView').innerHTML = null
 
-    document.getElementById('3cards').innerHTML = infoCards
-    await genPullCommitsTable(pullCommits)
-    dynamicChart()
+    document.getElementById('cards').innerHTML = infoCards
+    // clear all svg's and tables
+    d3.selectAll('svg').remove()
+    d3.selectAll('table').remove()
+    
+    var freqData = []
+    var releaseArray = []
+    var info = commitsPerDev()
+    for (let t = 0; t < info.length; t++) {
+      var releaseData = info[t].release
+      var obj = {}
+      var total = 0
+      for (let f = 0; f < releaseData.length; f++) {
+        obj['release' + releaseData[f].number] = releaseData[f].commits
+        total += releaseData[f].commits
+      }
+      freqData.push({
+        State: info[t].name,
+        freq: obj,
+        total: total
+      })
+    }
+    for (let r = 0; r < releases.length; r++) {
+      releaseArray.push('release' + (r + 1))
+    }
+    console.log(freqData)
+    console.log(releaseArray)
+    dashboard('#dashboard', freqData, releaseArray, 'Commits Per Developer')
+
     return false
   })
 
@@ -372,7 +423,10 @@ $(document).ready(function () {
     var template = Handlebars.compile(tableInfor)
     var info = template({
       title: 'Pull Request Per Developer',
-      description: 'Information about the contributions per developer is given. The tables show how much each developer contributed for each release.'
+      description: 'Information about the pull request contributions per developer is given.' +
+                 'The pie chart shows the total pull requests per release.' +
+                  'The histogram shows the pull request contribution of each developer.' +
+                   'Both are interactive. The tables show how much each developer contributed for each release.'
 
     })
     document.getElementById('theading').innerHTML = info
@@ -383,8 +437,8 @@ $(document).ready(function () {
       text1: (releases.length),
       card2: 'Number of Contributors',
       text2: ((getNames()).length),
-      card3: 'Closed Pulls:',
-      text3: closedPulls.length
+      card3: 'Average Pull Request Per Dev',
+      text3: (summary.length/contributors.length)
 
     })
     document.getElementById('body').style.backgroundColor = 'white'
@@ -412,8 +466,6 @@ $(document).ready(function () {
     // clear all svg's and tables
     d3.selectAll('svg').remove()
     d3.selectAll('table').remove()
-    console.log(mergedPullPerDev())
-    console.log(releases)
     var freqData = []
     var releaseArray = []
     var info = mergedPullPerDev()
@@ -434,15 +486,42 @@ $(document).ready(function () {
     for (let r = 0; r < releases.length; r++) {
       releaseArray.push('release' + (r + 1))
     }
-    console.log(freqData)
-    console.log(releaseArray)
-    dashboard('#dashboard', freqData, releaseArray)
+    dashboard('#dashboard', freqData, releaseArray, 'Pull Requests Per Developer')
     for (let i = 0; i < tableData.length; i++) {
       await tabulate(tableData[i].data, tableData[i].column, tableData[i].div)
     }
     return false
   })
 })
+function averageCommits () {
+  var total = 0
+  for (let i = 0; i < commitsPerContributor.length; i++) {
+    total += ((commitsPerContributor[i]).commits).length    
+  }
+  return (total/commitsPerContributor.length)
+}
+
+function totalCommits () {
+  var total = 0
+  for (var i = 0; i < commitsPerContributor.length; i++) {
+    total += ((commitsPerContributor[i]).commits).length    
+  }
+  return total
+}
+function tbdScore () {
+  var codeReviewed = ((reviews.length)/(summary.length))*(100/3)
+  var successBuild = (totalHealthyBuilds/ summary.length)*(100/3)
+  var branchesVsMerges = (branches.length/summary.length)*(100/3)
+  var total = codeReviewed + successBuild + branchesVsMerges
+  console.log('TBD Score: ')
+  console.log('codeReviewed = '+codeReviewed+'%')
+  console.log('successBuild = '+successBuild+'%')
+  console.log('branchesVsMerges = '+branchesVsMerges+'%')
+  console.log('total = '+total+'%')
+
+  return (total.toFixed(2))
+}
+
 function overviewPie () {
   var data = contributorMergedPullReq
   var div = '#overviewPie'
@@ -450,8 +529,8 @@ function overviewPie () {
     .value(function (d) { return d.pulls })
     .sort(null)
 
-  var w = 300
-  var h = 300
+  var w = 400
+  var h = 400
 
   var outerRadius = (w - 2) / 2
 
@@ -629,7 +708,72 @@ function closedPullPerDev () {
   }
   return closedDevReleases
 }
+function commitsPerDev () {
+  // populate the object that stores the information per developer
+  for (var z = contributors.length - 1; z >= 0; z--) {
+    var release = []
+    for (var a = 0; a < releases.length; a++) {
+      release[a] = {
+        'number': a + 1,
+        'commits': 0
+      }
+    }
 
+    comPerDev[z] = {
+      'name': contributors[z].login,
+      'release': release
+    }
+  }
+
+
+  // convert data into unix time stamp
+  var datesPerDev = [] 
+  for (var d = 0; d < commitsPerContributor.length; d++) {
+    var com = commitsPerContributor[d].commits
+    var dates = []
+    for (let h = 0; h < com.length; h++) {
+      var dummy = (((com[h]).commit).author).date
+      if (dummy !== null) {
+        const date = new Date((dummy).substring(0, 10))
+        dates.push(date.getTime())
+      }            
+    }
+    datesPerDev.push({
+      'name': commitsPerContributor[d].name,
+      'date': dates
+    })
+  }
+// console.log(datesPerDev)
+    // generate release table
+
+  for (var i = 0; i < datesPerDev.length; i++) {
+    var pullDates = datesPerDev[i].date
+    // convert all the dates into integers so that they can be compared
+    pullDates.forEach(parseInt)
+    releases.forEach(parseInt)
+    
+    for (var j = 0; j < pullDates.length; j++) {
+      var prev = 0
+      for (let v = 0; v < releases.length; v++) {
+        if ((pullDates[j] > prev) && (pullDates[j] <= releases[v])) {
+          for (var k = 0; k < comPerDev.length; k++) {
+            if (comPerDev[k].name === (datesPerDev[i]).name) {
+              console.log(comPerDev[k].name);
+              ((comPerDev[k]).release[v]).commits++
+            }
+          }
+        } else {
+
+        }
+        prev = releases[v]
+
+      }
+     
+    }
+
+  }
+  return comPerDev
+}
 function genSummaryTable (data) {
   d3.selectAll('table').remove()
   d3.selectAll('svg').remove()
@@ -701,7 +845,7 @@ function getReleaseDateForPie (releases) {
   }
   return (releaseInfo).actualreleaseDates
 }
-function dashboard (id, fData, releaseArray) {
+function dashboard (id, fData, releaseArray, heading) {
   var barColor = 'steelblue'
   // Assign colours for each of the pie segments
   function color_google (n) {
@@ -735,9 +879,9 @@ function dashboard (id, fData, releaseArray) {
       .attr('x', (hGDim.w / 2))
       .attr('y', 0 - (hGDim.t / 2))
       .attr('text-anchor', 'middle')
-      .style('font-size', '16px')
+      .style('font-size', '20px')
       .style('text-decoration', 'underline')
-      .text('Pull Requests Per Developer')
+      .text(heading)
       // create function for x-axis mapping.
     var x = d3.scale.ordinal().rangeRoundBands([0, hGDim.w], 0.1)
       .domain(fD.map(function (d) { return d[0] }))

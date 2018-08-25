@@ -41,6 +41,7 @@ td, th {
       <a id="pullOverview" href="#review">Pull Request overview</a>
       <a id="pullreview" href="#review">Pull Request Review</a>
       <a id="pullPerDev" href="#pullPerDev">Pull Request Per Developer</a>
+      <a id="commitsPerDev" href="#commitsPerDev">Commit Per Developer</a>
     </div>
 
   </div>  
@@ -90,7 +91,7 @@ td, th {
   </div>
   <div class="Ocolumn1" style="background-color:#ccc;">
     <h2>Main Language</h2>
-    <p>Don'tForgentMe.JS:)</p>
+    <p>{{language}}</p>
   </div>
 </div>
 <div class="Orow2">
@@ -100,7 +101,7 @@ td, th {
   </div>
   <div class="Ocolumn5" style="background-color:#bbb;">
     <h2>Trunk Based Analysis Score</h2>
-    <p>%</p>
+    <p>{{tbdScore}}%</p>
   </div>
 </div>
 
@@ -112,14 +113,14 @@ td, th {
   </div>
 </div>
 <div class="Orow2">
-  <div class="Ocolumn2" style="background-color:#aaa;">
-      <h2>Project Contribution Per Developer</h2>
-    <div id = "overviewPie" style="display:inline-block"></div>
+  <div class="Ocolumn2" id = "barGraph" style="background-color:#aaa;text-align:center;">
+
+      <h2 style="text-align:left;">Number of Lines Added Per Developer Per Sprint</h2>
 
   </div>
 
-  <div align='centre' id="barGraph"class="Ocolumn2" style="background-color:#bbb;">
-      <h2>Number of lines added per developer per sprint</h2>
+  <div align='centre' id="overviewPie"class="Ocolumn23" style="background-color:#bbb; text-align:center;">
+    <h2  style="text-align:left;">Project Pull Request Per Developer</h2>
 
   </div>
 </div>

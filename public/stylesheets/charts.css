@@ -4,7 +4,7 @@
 
 .sidenav {
     height: 100%;
-    width: 200px;
+    width: 210px;
     position: fixed;
     z-index: 1;
     top: 0;
@@ -30,7 +30,7 @@
 .main {
     margin-left: 200px; /* Same as the width of the sidenav */
     font-size: 15px; /* Increased text to enable scrolling */
-    padding: 0px 10px;
+    padding: 0px 3px;
 }
 
 @media screen and (max-height: 450px) {
@@ -84,7 +84,7 @@
 
     .axis text {
       font-family: sans-serif;
-      font-size: 10px;
+      font-size: 14px;
     }
 
     .timeline-label {
@@ -123,7 +123,7 @@
     padding: 5px;
 }
 .barRow{
-    clear: both
+    clear: both;
     display: flex;
 }
 
@@ -311,7 +311,7 @@ Repository list dropdown button
 /* Create three equal columns that floats next to each other */
 .Ocolumn3 {
     float: left;
-    width: 84%;
+    width: 84.2%;
     padding: 10px;
     height: 80px; /* Should be removed. Only for demonstration */
 }
@@ -358,11 +358,22 @@ Repository list dropdown button
     clear: both;
     padding: 2px;
 }
-/* Create three equal columns that floats next to each other */
-.Ocolumn2 {
-    float: left;
-    width: 50%;
+.Ocolumn23 {
+    float: right;
+    width: 42%;
     padding: 10px;
+    height: 520px;
+     border-right: 3px solid green;
+    border-bottom: 3px solid green;
+    border-left: 1px solid green;
+    border-top: 1px solid green;
+    font-size: 16px;
+}
+.Ocolumn2 {
+    float: right;
+    width: 58%;
+    padding: 10px;
+    height: 520px;
      border-right: 3px solid green;
     border-bottom: 3px solid green;
     border-left: 1px solid green;
@@ -384,7 +395,7 @@ Repository list dropdown button
     width: 220px;
     position: absolute;
     top: 90px;
-    right: 17px;
+    right: 14px;
     background: #aaa;
     overflow-x: hidden;
     padding: 8px 0;
@@ -574,7 +585,7 @@ Create loader to show while waiting for data to finish loading*/
 path {  stroke: #fff; }
 path:hover {  opacity:0.9; }
 rect:hover {  fill:blue; }
-.axis {  font: 10px sans-serif; }
+.axis {  font: 14px sans-serif; }
 .legend tr{    border-bottom:1px solid grey; }
 .legend tr:first-child{    border-top:1px solid grey; }
 
@@ -585,7 +596,7 @@ rect:hover {  fill:blue; }
   shape-rendering: crispEdges;
 }
 
-.x.axis path {  display: none; }
+
 .legend{
     margin-bottom:76px;
     display:inline-block;
@@ -597,7 +608,7 @@ rect:hover {  fill:blue; }
     vertical-align:bottom;
 }
 .legendFreq, .legendPerc{
-    align:right;
+    align-content:right;
     width:50px;
 }
 

@@ -3,7 +3,9 @@ $(document).ready(function () {
     var tableInfor = document.getElementById('table_heading_template').innerHTML
     var template = Handlebars.compile(tableInfor)
     var info = template({
-      title: 'Sprint Overview'
+      title: 'Sprint Overview',
+      description: 'The timeline shows the total sprints/releases for the overall project. Click the timeline to see contributions per release.'
+
 
     })
     // document.getElementById('pullReqNo').innerHTML =null;
@@ -639,8 +641,6 @@ function stackedBarDirtyData (data, names) {
 
 // ploting for the overview page
 function stackedBarOverview (data, names) {
-  d3.selectAll('table').remove()
-  d3.selectAll('svg').remove()
   var margin = {top: 80, right: 160, bottom: 90, left: 70}
   var width = 550 - margin.left - margin.right
   var height = 350 - margin.top - margin.bottom
