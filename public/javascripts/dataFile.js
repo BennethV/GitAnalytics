@@ -3,7 +3,8 @@ $(document).ready(function () {
     var tableInfor = document.getElementById('table_heading_template').innerHTML
     var template = Handlebars.compile(tableInfor)
     var info = template({
-      title: 'Timeline of Sprints'
+      title: 'Timeline of Sprints',
+      description: 'The timeline shows the total sprints/releases for the overall project. Click the timeline to see contributions per release.'
 
     })
     // document.getElementById('pullReqNo').innerHTML =null;
