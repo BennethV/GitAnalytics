@@ -10,7 +10,9 @@ $(document).ready(function () {
     })
     // document.getElementById('pullReqNo').innerHTML =null;
     document.getElementById('theading').innerHTML = info
-    d3.selectAll('table').remove() 
+    d3.selectAll('table').remove()
+    d3.selectAll('svg').remove()
+    plotTimeline()
     stackedBarDirtyData(dirtyData, getNames())
     var cardInfor = document.getElementById('3cards_template').innerHTML
     var popUpInfo = document.getElementById('specialPopup').innerHTML
