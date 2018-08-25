@@ -15,12 +15,12 @@ var repos = []
 var repoList = []
 var totalHealthyBuilds = 0
 var branches = []
-var totalCommits = 0
 var commitsPerContributor = []
 var comPerDev = []
 var statusOnMaster = ''
 var acquiredData = false
 var pullInfo = []
+var generalRepoData = []
 var userInfo = {};
 
 (async function () {
@@ -60,8 +60,8 @@ var userInfo = {};
         // Fetch all the commits of the repo
         res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/commits?per_page=250&access_token=${userInfo.accessToken}`)
         commits = await res.json()
-        totalCommits = commits.length
-
+        res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}?access_token=${userInfo.accessToken}`)
+        generalRepoData = await res.json()
         // fectch branch information
         res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/branches?per_page=250&access_token=${userInfo.accessToken}`)
         branches = await res.json()
@@ -145,7 +145,7 @@ var userInfo = {};
           count++
         } // closedPulls loop ends here
         // populating pull request review objects
-        for (var q = reviews.length - 1; q >= 0; q--) {
+        for (var q = 0 ; q < reviews.length; q++) {
           // if the code was reviewed
           if (typeof (reviews[q]).length !== 'undefined' && (reviews[q]).length > 0) {
             var reviewer = ''
@@ -155,12 +155,12 @@ var userInfo = {};
 
             for (var k = 0; k < (reviews[q]).length; ++k) {
               reviewer = ((reviews[q])[k]).user.login
-              date += ((reviews[q])[k]).submitted_at + '|==> '
+              date = ((reviews[q])[k]).submitted_at
               status += ((reviews[q])[k]).state + '|==> '
               revMessage += ((reviews[q])[k]).body + '|==> '
             }
             pullReview.push({
-              'Pull Request': closedPulls[q].number,
+              'Pull Request': summary[q].Pull_Request,
               'Reviewer': reviewer,
               'Reviewee': closedPulls[q].user.login,
               'Date': date,
@@ -270,16 +270,19 @@ $(document).ready(function () {
     var overviewData = template({
       title: 'welcome to ' + userInfo.repository + ' Repository Statistics',
       NumberOfSprint: sprintNumber,
-      totalCommits: totalCommits,
+      totalCommits: totalCommits(),
       repos: repoList,
       statusOnMaster: statusOnMaster,
-      names: names
+      names: names,
+      language:generalRepoData.language,
+      tbdScore: tbdScore()
     })
     document.getElementById('frontOverview').innerHTML = overviewData
     d3.selectAll('table').remove()
     d3.selectAll('svg').remove()
-    stackedBarOverview(contributionsPerSprint, getNames())
     overviewPie()
+    stackedBarOverview( contributionsPerSprint, getNames())
+
     return false
   })
 
@@ -304,7 +307,7 @@ $(document).ready(function () {
       card2: 'Merged Pulls:',
       text2: summary.length,
       card3: 'Total Commits:',
-      text3: totalCommits,
+      text3: totalCommits(),
       card4: 'Healthy Builds',
       text4: totalHealthyBuilds + '/' + summary.length
     })
@@ -365,7 +368,7 @@ $(document).ready(function () {
     template = Handlebars.compile(cardInfor)
     var infoCards = template({
       card1: 'Total Commits',
-      text1: totalCommits,
+      text1: totalCommits(),
       card2: 'Total Merged Pulls',
       text2: summary.length,
       card3: 'Total Releases',
@@ -496,6 +499,28 @@ function averageCommits () {
   }
   return (total/commitsPerContributor.length)
 }
+
+function totalCommits () {
+  var total = 0
+  for (var i = 0; i < commitsPerContributor.length; i++) {
+    total += ((commitsPerContributor[i]).commits).length    
+  }
+  return total
+}
+function tbdScore () {
+  var codeReviewed = ((reviews.length)/(summary.length))*(100/3)
+  var successBuild = (totalHealthyBuilds/ summary.length)*(100/3)
+  var branchesVsMerges = (branches.length/summary.length)*(100/3)
+  var total = codeReviewed + successBuild + branchesVsMerges
+  console.log('TBD Score: ')
+  console.log('codeReviewed = '+codeReviewed+'%')
+  console.log('successBuild = '+successBuild+'%')
+  console.log('branchesVsMerges = '+branchesVsMerges+'%')
+  console.log('total = '+total+'%')
+
+  return (total.toFixed(2))
+}
+
 function overviewPie () {
   var data = contributorMergedPullReq
   var div = '#overviewPie'
@@ -503,8 +528,8 @@ function overviewPie () {
     .value(function (d) { return d.pulls })
     .sort(null)
 
-  var w = 300
-  var h = 300
+  var w = 400
+  var h = 400
 
   var outerRadius = (w - 2) / 2
 

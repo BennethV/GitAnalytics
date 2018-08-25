@@ -456,8 +456,6 @@ function plotBar (data, names) {
 
 // ploting for the overview page
 function stackedBarOverview (data, names) {
-  d3.selectAll('table').remove()
-  d3.selectAll('svg').remove()
   var margin = {top: 80, right: 160, bottom: 90, left: 70}
   var width = 550 - margin.left - margin.right
   var height = 350 - margin.top - margin.bottom
