@@ -3,7 +3,7 @@ $(document).ready(function () {
     var tableInfor = document.getElementById('table_heading_template').innerHTML
     var template = Handlebars.compile(tableInfor)
     var info = template({
-      title: 'Timeline of Sprints'
+      title: 'Sprint Overview'
 
     })
     // document.getElementById('pullReqNo').innerHTML =null;
@@ -11,8 +11,6 @@ $(document).ready(function () {
     d3.selectAll('table').remove()
     d3.selectAll('svg').remove()
     plotTimeline()
-
-    plotBar(contributionsPerSprint, getNames())
     stackedBarDirtyData(dirtyData, getNames())
     var cardInfor = document.getElementById('3cards_template').innerHTML
     var popUpInfo = document.getElementById('specialPopup').innerHTML
@@ -22,7 +20,7 @@ $(document).ready(function () {
       card3: 'Number Of Sprints',
       text3: sprintNumber,
       card2: 'Average Sprint Length',
-      text2: sprintNumber,
+      text2: SprintLength,
       card1: 'Start Date',
       text1: startDate
     })
@@ -41,7 +39,6 @@ $(document).ready(function () {
     d3.selectAll('table').remove()
     d3.selectAll('svg').remove()
     plotTimeline()
-    plotBar(contributionsPerSprint, getNames())
     stackedBarDirtyData(dirtyData, getNames())
     dynamicBarData()
     return false
@@ -58,6 +55,8 @@ var SprintLength = ''
 var startDate = ''
 var graphState = []
 var dirtyData = []
+// settingup the div for stackedgraphs
+
 // fetches the release information from github
 async function getReleases () {
   try {
@@ -81,7 +80,7 @@ function plotTimeline () {
   var day = 1000 * 60 * 60 * 24 // this gives a day in milliseconds
   var testData = cleanData()
   const width = 1300
-  var height = 350
+  var height = 230
   var lastDate = (releaseInfo.expreleaseDates).length - 1
   var endDay = ''
   const actualLastDay = parseInt(releaseInfo.actualreleaseDates[lastDate])
@@ -127,6 +126,13 @@ function plotTimeline () {
         }
       })
     var svg = d3.select('#timeline1').append('svg').attr('width', width).datum(testData).call(chart)
+    svg.append('text')
+      .attr('x', (width / 2))
+      .attr('y', 0 - (10 / 2))
+      .attr('text-anchor', 'middle')
+      .style('font-size', '20px')
+      .style('text-decoration', 'Bold')
+      .text('Timeline Of Sprints')
   }
   timelineRect()
 }
@@ -309,16 +315,12 @@ function convertTimestamp (timestamp) {
 /********************************************************************************/
 // Setup svg using Bostock's margin convention
 
-function plotBar (data, names) {
-  var margin = {top: 80, right: 160, bottom: 50, left: 70}
+function plotBar (data, names, divName) {
+  var margin = {top: 80, right: 160, bottom: 90, left: 100}
   var width = 550 - margin.left - margin.right
   var height = 310 - margin.top - margin.bottom
-  var iDiv = document.createElement('div')
-  iDiv.className = 'main'
-  // iDiv.id = 'stacked1'
-  document.getElementsByTagName('body')[0].appendChild(iDiv)
 
-  var svg = d3.select('#stacked1')
+  var svg = d3.select('#' + divName)
     .append('svg')
     .attr('width', width + margin.left + margin.right)
     .attr('height', height + margin.top + margin.bottom)
@@ -368,6 +370,12 @@ function plotBar (data, names) {
     .attr('class', 'x axis')
     .attr('transform', 'translate(0,' + height + ')')
     .call(xAxis)
+    .selectAll('text')
+    .attr('transform', 'rotate(-45)')
+    .style('text-anchor', 'end')
+    .attr('dx', '-.8em')
+    .attr('dy', '-.55em')
+    .attr('transform', 'rotate(-45)')
 
   // Create groups for each series, rects for each segment
   var groups = svg.selectAll('g.cost')
@@ -444,7 +452,7 @@ function plotBar (data, names) {
     .text('Number of lines added')
     // text label for the x axis
   svg.append('text')
-    .attr('transform', 'translate(' + (width / 2) + ' ,' + (height + 20 + 20) + ')')
+    .attr('transform', 'translate(' + (width / 2) + ' ,' + (height + 80) + ')')
     .style('text-anchor', 'middle')
     .text('Release Dates')
   svg.append('text')
@@ -452,23 +460,39 @@ function plotBar (data, names) {
     .attr('y', 0 - (margin.top / 2))
     .attr('text-anchor', 'middle')
     .style('font-size', '20px')
-    .style('text-decoration', 'underline')
-    .text('Number of line of code added vs release dates')
+    .style('text-decoration', 'bold')
+    .text('Filtered No. of Lines of Code Added vs Release Dates')
 }
 
 function stackedBarDirtyData (data, names) {
-  // console.log(data)
-  // console.log(names)
-//  console.log(data)
-  var margin = {top: 80, right: 160, bottom: 50, left: 70}
+  d3.select('#individualTable').remove()
+  d3.select('#individualBar').remove()
+  d3.select('#cleanBar').remove()
+  d3.select('#dirtyBar').remove()
+  var margin = {top: 80, right: 160, bottom: 90, left: 100}
   var width = 550 - margin.left - margin.right, height = 310 - margin.top - margin.bottom
 
   var iDiv = document.createElement('div')
   iDiv.className = 'main'
-  // iDiv.id = 'stacked1'
+  var innerDiv = document.createElement('div')
+  innerDiv.className = 'row'
+
+  var dirtyDiv = document.createElement('div')
+  dirtyDiv.className = 'column'
+  dirtyDiv.id = 'dirtyBar'
+  // creating a div for the table
+
+  var cleanDiv = document.createElement('div')
+  cleanDiv.className = 'column'
+  cleanDiv.id = 'cleanBar'
+
+  innerDiv.appendChild(cleanDiv)
+  innerDiv.appendChild(dirtyDiv)
+
+  iDiv.appendChild(innerDiv)
   document.getElementsByTagName('body')[0].appendChild(iDiv)
 
-  var svg = d3.select('#stackedDirty')
+  var svg = d3.select('#dirtyBar')
     .append('svg')
     .attr('width', width + margin.left + margin.right)
     .attr('height', height + margin.top + margin.bottom)
@@ -518,7 +542,12 @@ function stackedBarDirtyData (data, names) {
     .attr('class', 'x axis')
     .attr('transform', 'translate(0,' + height + ')')
     .call(xAxis)
-
+    .selectAll('text')
+    .attr('transform', 'rotate(-45)')
+    .style('text-anchor', 'end')
+    .attr('dx', '-.8em')
+    .attr('dy', '-.55em')
+    .attr('transform', 'rotate(-45)')
   // Create groups for each series, rects for each segment
   var groups = svg.selectAll('g.cost')
     .data(dataset)
@@ -594,7 +623,7 @@ function stackedBarDirtyData (data, names) {
     .text('Number of lines added')
     // text label for the x axis
   svg.append('text')
-    .attr('transform', 'translate(' + (width / 2) + ' ,' + (height + 20 + 20) + ')')
+    .attr('transform', 'translate(' + (width / 2) + ' ,' + (height + 80) + ')')
     .style('text-anchor', 'middle')
     .text('Release Dates')
   svg.append('text')
@@ -602,8 +631,10 @@ function stackedBarDirtyData (data, names) {
     .attr('y', 0 - (margin.top / 2))
     .attr('text-anchor', 'middle')
     .style('font-size', '20px')
-    .style('text-decoration', 'underline')
-    .text('Number of line of code added vs release dates')
+    .style('text-decoration', 'bold')
+    .text('Unfiltered No. of Lines of Code Added vs Release Dates')
+
+  plotBar(contributionsPerSprint, getNames(), 'cleanBar')
 }
 
 // ploting for the overview page
@@ -663,6 +694,12 @@ function stackedBarOverview (data, names) {
     .attr('class', 'x axis')
     .attr('transform', 'translate(0,' + height + ')')
     .call(xAxis)
+    .selectAll('text')
+    .attr('transform', 'rotate(-45)')
+    .style('text-anchor', 'end')
+    .attr('dx', '-.8em')
+    .attr('dy', '-.55em')
+    .attr('transform', 'rotate(-45)')
 
   // Create groups for each series, rects for each segment
   var groups = svg.selectAll('g.cost')
@@ -739,13 +776,13 @@ function stackedBarOverview (data, names) {
     .text('Number of lines added')
     // text label for the x axis
   svg.append('text')
-    .attr('transform', 'translate(' + (width / 2) + ' ,' + (height + margin.top + 20) + ')')
+    .attr('transform', 'translate(' + (width / 2) + ' ,' + (height + 80) + ')')
     .style('text-anchor', 'middle')
     .text('Release Dates')
 }
 
 function colorFunction () {
-  var colorArray = ['#3366cc', '#dc3912', '#ff9900', '#109618', '#990099', '#0099c6', '#dd4477', '#66aa00', '#b82e2e', '#316395', '#994499', '#22aa99', '#aaaa11', '#6633cc', '#e67300', '#8b0707', '#651067', '#329262', '#5574a6', '#3b3eac']
+  var colorArray = ['#e6beff', '#aa6e28', '#808080', '#008080', '#aa6e28', '#46f0f0', '#dd4477', '#66aa00', '#b82e2e', '#316395', '#994499', '#22aa99', '#aaaa11', '#6633cc', '#e67300', '#8b0707', '#651067', '#329262', '#5574a6', '#3b3eac']
   return colorArray
 };
 /*
@@ -805,8 +842,8 @@ function stackeBarData () {
     }
     data[i] = obj
     dirtyData[i] = obj2
-    // console.log(data[i])
-
+  }
+  // console.log(data[i])
 
   for (var i = 0; i < summary.length; i++) {
     var index = ((summary[i]).release_id - 1);
@@ -857,6 +894,8 @@ function sprintBar (barData, tableData, i) {
   var data = barData
   d3.select('#individualTable').remove()
   d3.select('#individualBar').remove()
+  d3.select('#cleanBar').remove()
+  d3.select('#dirtyBar').remove()
   var barId = 'individualBar'
   var tableId = 'individualTable'
   var iDiv = document.createElement('div')
@@ -917,6 +956,7 @@ function sprintBar (barData, tableData, i) {
     .attr('transform', 'translate(0,' + height + ')')
     .call(xAxis)
     .selectAll('text')
+    .attr('transform', 'rotate(-45)')
     .style('text-anchor', 'end')
     .attr('dx', '-.8em')
     .attr('dy', '-.55em')
@@ -960,8 +1000,8 @@ function sprintBar (barData, tableData, i) {
     .attr('y', 0 - (10 / 2))
     .attr('text-anchor', 'middle')
     .style('font-size', '20px')
-    .style('text-decoration', 'underline')
-    .text('Number of line of code added vs release dates')
+    .style('text-decoration', 'bold')
+    .text('Filtered No. of line of code added vs release dates')
   d3.selectAll('table').remove()
   tabulate(tableData.data, tableData.columns, div = tableDiv)
 }

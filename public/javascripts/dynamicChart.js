@@ -1,10 +1,8 @@
 // Tutorial: http://frameworkish.com/html/2016/05/04/grouped-dynamic-bar-chart-d3.html
 function dynamicChart () {
-
   var data = dynamicBarData()
   var ageNames = ['Total Commits', 'Pull Requests', 'reviewed Pull Request', 'Build status']
   var ids = ['comit', 'pull', 'revPull', 'stattte' ]
-
 
   // Let's populate the categoeries checkboxes
   d3.select('.categories').selectAll('.checkbox')
@@ -18,7 +16,7 @@ function dynamicChart () {
     })
 
   // some variables declarations
-  var margin = {top: 20, right: 20, bottom: 30, left: 40},
+  var margin = {top: 20, right: 50, bottom: 30, left: 80},
     width = 800 - margin.left - margin.right,
     height = 400 - margin.top - margin.bottom
 
@@ -33,7 +31,6 @@ function dynamicChart () {
   // just a simple scale of colors
   var color = d3.scale.ordinal()
     .range(['#E666B3', '#33991A', '#CC9999', '#B3B31A', '#00E680', '#FF1A66', '#E6331A', '#33FFCC', '#ff8c00'])
-
   //
   var xAxis = d3.svg.axis()
     .scale(x)
@@ -141,8 +138,8 @@ function dynamicChart () {
     var legendColor = legend.selectAll('.legend-color').data(function (d) { return [d] })
     legendColor.enter().append('rect')
     legendColor
-      .attr('class', 'legend-color')
-      .attr('x', width - 18)
+      // .attr('class', 'legend-color')
+      .attr('x', width + 18)
       .attr('width', 18)
       .attr('height', 18)
       .style('fill', color)
