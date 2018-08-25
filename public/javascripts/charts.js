@@ -139,7 +139,8 @@ var userInfo = {};
               'additions': '',
               'normal_Delitions': '',
               'node_Additions': '',
-              'node_Deletions': ''
+              'node_Deletions': '',
+              'all_Additions': ''
             })
           }
           count++
@@ -956,6 +957,7 @@ function dashboard (id, fData, releaseArray, heading) {
   // function to handle pieChart.
   function pieChart (pD) {
     var pC = {}, pieDim = {w: 350, h: 350}
+
     pieDim.r = Math.min(pieDim.w, pieDim.h) / 2
 
     // create svg for pie chart.
@@ -970,11 +972,13 @@ function dashboard (id, fData, releaseArray, heading) {
     var pie = d3.layout.pie().sort(null).value(function (d) { return d.freq })
 
     // Draw the pie slices.
+
     piesvg.selectAll('path')
       .data(pie(pD))
       .enter()
       .append('path')
       .attr('d', arc)
+
       .each(function (d) { this._current = d })
       .style('fill', function (d) {
         return segColor(d.data.type)
@@ -1056,6 +1060,7 @@ function dashboard (id, fData, releaseArray, heading) {
   }
 
   // calculate total frequency by segment for all state.
+
   var tF = releaseArray.map(function (d) {
     return {type: d, freq: d3.sum(fData.map(function (t) { return t.freq[d] }))}
   })
