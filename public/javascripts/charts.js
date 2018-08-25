@@ -127,7 +127,8 @@ var userInfo = {};
               'additions': '',
               'normal_Delitions': '',
               'node_Additions': '',
-              'node_Deletions': ''
+              'node_Deletions': '',
+              'all_Additions': ''
             })
           }
           count++
@@ -411,17 +412,17 @@ $(document).ready(function () {
     // clear all svg's and tables
     d3.selectAll('svg').remove()
     d3.selectAll('table').remove()
-console.log(mergedPullPerDev())
-console.log(releases)
+    console.log(mergedPullPerDev())
+    console.log(releases)
     var freqData = []
     var releaseArray = []
-    var info =mergedPullPerDev()
+    var info = mergedPullPerDev()
     for (let t = 0; t < info.length; t++) {
       var releaseData = info[t].release
-      var obj ={}
+      var obj = {}
       var total = 0
       for (let f = 0; f < releaseData.length; f++) {
-        obj['release'+releaseData[f].number] = releaseData[f].pulls
+        obj['release' + releaseData[f].number] = releaseData[f].pulls
         total += releaseData[f].pulls
       }
       freqData.push({
@@ -431,7 +432,7 @@ console.log(releases)
       })
     }
     for (let r = 0; r < releases.length; r++) {
-      releaseArray.push('release' + (r+1))      
+      releaseArray.push('release' + (r + 1))
     }
     console.log(freqData)
     console.log(releaseArray)
@@ -713,8 +714,8 @@ function dashboard (id, fData, releaseArray) {
     for (var i = 0; i < releaseArray.length; i++) {
       obj[releaseArray[i]] = color_google(i)
     }
-    return obj[c] 
-}
+    return obj[c]
+  }
 
   // compute total for each state.@@@@@ you removed code
 
@@ -812,13 +813,13 @@ function dashboard (id, fData, releaseArray) {
   // function to handle pieChart.
   function pieChart (pD) {
     var pC = {}, pieDim = {w: 350, h: 350}
+
     pieDim.r = Math.min(pieDim.w, pieDim.h) / 2
 
     // create svg for pie chart.
     var piesvg = d3.select(id).append('svg')
       .attr('width', pieDim.w).attr('height', pieDim.h).append('g')
       .attr('transform', 'translate(' + pieDim.w / 2 + ',' + pieDim.h / 2 + ')')
-
 
       // create function to draw the arcs of the pie slices.
     var arc = d3.svg.arc().outerRadius(pieDim.r - 10).innerRadius(0)
@@ -827,15 +828,17 @@ function dashboard (id, fData, releaseArray) {
     var pie = d3.layout.pie().sort(null).value(function (d) { return d.freq })
 
     // Draw the pie slices.
+
     piesvg.selectAll('path')
       .data(pie(pD))
       .enter()
       .append('path')
       .attr('d', arc)
+
       .each(function (d) { this._current = d })
       .style('fill', function (d) {
-        return segColor(d.data.type) 
-})
+        return segColor(d.data.type)
+      })
       .on('mouseover', mouseover).on('mouseout', mouseout)
 
       // create function to update pie-chart. This will be used by histogram.
@@ -848,14 +851,14 @@ function dashboard (id, fData, releaseArray) {
       // call the update function of histogram with new data.
       hG.update(fData.map(function (v) {
         return [v.State, v.freq[d.data.type]]
- }), segColor(d.data.type))
+      }), segColor(d.data.type))
     }
     // Utility function to be called on mouseout a pie slice.
     function mouseout (d) {
       // call the update function of histogram with all data.
       hG.update(fData.map(function (v) {
         return [v.State, v.total]
- }), barColor)
+      }), barColor)
     }
     // Animating the pie-slice requiring a custom function which specifies
     // how the intermediate paths should be drawn.
@@ -913,6 +916,7 @@ function dashboard (id, fData, releaseArray) {
   }
 
   // calculate total frequency by segment for all state.
+
   var tF = releaseArray.map(function (d) {
     return {type: d, freq: d3.sum(fData.map(function (t) { return t.freq[d] }))}
   })
