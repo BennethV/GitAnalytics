@@ -21,7 +21,8 @@ var statusOnMaster = ''
 var acquiredData = false
 var pullInfo = []
 var generalRepoData = []
-var userInfo = {};
+var userInfo = {}
+var trackHoverPopUp = 0;
 
 (async function () {
   // show loading gif when starting to acquire data
@@ -89,7 +90,7 @@ var userInfo = {};
             'name': contributors[d].login,
             'pulls': 0
           }
-          res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/commits?author=${ contributors[d].login}&per_page=250&access_token=${userInfo.accessToken}`)
+          res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/commits?author=${contributors[d].login}&per_page=250&access_token=${userInfo.accessToken}`)
           var array = await res.json()
           commitsPerContributor.push({
             'name': contributors[d].login,
@@ -146,7 +147,7 @@ var userInfo = {};
           count++
         } // closedPulls loop ends here
         // populating pull request review objects
-        for (var q = 0 ; q < reviews.length; q++) {
+        for (var q = 0; q < reviews.length; q++) {
           // if the code was reviewed
           if (typeof (reviews[q]).length !== 'undefined' && (reviews[q]).length > 0) {
             var reviewer = ''
@@ -264,6 +265,7 @@ $(document).ready(function () {
     document.getElementById('3cards').innerHTML = null
     document.getElementById('defaulView').innerHTML = null
     document.getElementById('dynamicBarGraph').innerHTML = null
+    document.getElementById('popupDetail').innerHTML = null
     var overViewInfo = document.getElementById('overviewLayout-template').innerHTML
     var template = Handlebars.compile(overViewInfo)
     var sprintNumber = releaseInfo.actualreleaseDates.length - 1
@@ -275,14 +277,22 @@ $(document).ready(function () {
       repos: repoList,
       statusOnMaster: statusOnMaster,
       names: names,
-      language:generalRepoData.language,
+      language: generalRepoData.language,
       tbdScore: tbdScore()
     })
     document.getElementById('frontOverview').innerHTML = overviewData
     d3.selectAll('table').remove()
     d3.selectAll('svg').remove()
     overviewPie()
-    stackedBarOverview( contributionsPerSprint, getNames())
+    if (grouptValidation) {
+      stackedBarOverview(contributionsPerSprint, getNames())
+    } else {
+      alert('This group has missing information.\n' +
+        'POSSIBLE REASONS:\n' +
+        '                  - Master has been Renamed\n' +
+        '                  - Branches are deleted\n' +
+        '                  - Pull requests are much leass than releases\n(master released multiple times with no changes)\n')
+    }
 
     return false
   })
@@ -318,6 +328,7 @@ $(document).ready(function () {
     document.getElementById('3cards').innerHTML = null
     document.getElementById('defaulView').innerHTML = null
     document.getElementById('cards').innerHTML = infoCards
+    document.getElementById('popupDetail').innerHTML = null
     await genSummaryTable(summary)
     dynamicChart()
     return false
@@ -351,6 +362,7 @@ $(document).ready(function () {
 
     var dynamicBar = document.getElementById('dynamicChart').innerHTML
     document.getElementById('dynamicBarGraph').innerHTML = dynamicBar
+    document.getElementById('popupDetail').innerHTML = null
     await genReviewTable(pullReview)
     dynamicChart()
     return false
@@ -361,11 +373,12 @@ $(document).ready(function () {
     var template = Handlebars.compile(tableInfor)
     var commitsInfo = template({
       title: 'Commits Per Developer',
-      description:'The histogram shows the total commits made by each developer. '+
+      description: 'The histogram shows the total commits made by each developer. ' +
                 'The pie chart shows the contribution of commits per release.'
     })
     document.getElementById('theading').innerHTML = commitsInfo
     var cardInfor = document.getElementById('cards_template').innerHTML
+    var popUpInfor = document.getElementById('popUp_template').innerHTML
     template = Handlebars.compile(cardInfor)
     var infoCards = template({
       card1: 'Total Commits',
@@ -380,12 +393,13 @@ $(document).ready(function () {
     document.getElementById('frontOverview').innerHTML = null
     document.getElementById('3cards').innerHTML = null
     document.getElementById('defaulView').innerHTML = null
+    document.getElementById('popupDetail').innerHTML = popUpInfor
 
     document.getElementById('cards').innerHTML = infoCards
     // clear all svg's and tables
     d3.selectAll('svg').remove()
     d3.selectAll('table').remove()
-    
+
     var freqData = []
     var releaseArray = []
     var info = commitsPerDev()
@@ -408,8 +422,9 @@ $(document).ready(function () {
     }
     console.log(freqData)
     console.log(releaseArray)
+    trackHoverPopUp = 0
+    pullRequestOverviewTip()
     dashboard('#dashboard', freqData, releaseArray, 'Commits Per Developer')
-
     return false
   })
 
@@ -420,6 +435,7 @@ $(document).ready(function () {
   })
   $('#pullPerDev').click(async function () {
     var tableInfor = document.getElementById('table_heading_template').innerHTML
+    var popUpInfor = document.getElementById('popUp_template').innerHTML
     var template = Handlebars.compile(tableInfor)
     var info = template({
       title: 'Pull Request Per Developer',
@@ -438,12 +454,12 @@ $(document).ready(function () {
       card2: 'Number of Contributors',
       text2: ((getNames()).length),
       card3: 'Average Pull Request Per Dev',
-      text3: (summary.length/contributors.length)
+      text3: (summary.length / contributors.length)
 
     })
     document.getElementById('body').style.backgroundColor = 'white'
     document.getElementById('frontOverview').innerHTML = null
-
+    document.getElementById('popupDetail').innerHTML = popUpInfor
     document.getElementById('3cards').innerHTML = null
     document.getElementById('dynamicBarGraph').innerHTML = null
     document.getElementById('cards').innerHTML = infoCards
@@ -490,34 +506,36 @@ $(document).ready(function () {
     for (let i = 0; i < tableData.length; i++) {
       await tabulate(tableData[i].data, tableData[i].column, tableData[i].div)
     }
+    trackHoverPopUp = 0
+    pullRequestOverviewTip()
     return false
   })
 })
 function averageCommits () {
   var total = 0
   for (let i = 0; i < commitsPerContributor.length; i++) {
-    total += ((commitsPerContributor[i]).commits).length    
+    total += ((commitsPerContributor[i]).commits).length
   }
-  return (total/commitsPerContributor.length)
+  return (total / commitsPerContributor.length)
 }
 
 function totalCommits () {
   var total = 0
   for (var i = 0; i < commitsPerContributor.length; i++) {
-    total += ((commitsPerContributor[i]).commits).length    
+    total += ((commitsPerContributor[i]).commits).length
   }
   return total
 }
 function tbdScore () {
-  var codeReviewed = ((reviews.length)/(summary.length))*(100/3)
-  var successBuild = (totalHealthyBuilds/ summary.length)*(100/3)
-  var branchesVsMerges = (branches.length/summary.length)*(100/3)
+  var codeReviewed = ((reviews.length) / (summary.length)) * (100 / 3)
+  var successBuild = (totalHealthyBuilds / summary.length) * (100 / 3)
+  var branchesVsMerges = (branches.length / summary.length) * (100 / 3)
   var total = codeReviewed + successBuild + branchesVsMerges
   console.log('TBD Score: ')
-  console.log('codeReviewed = '+codeReviewed+'%')
-  console.log('successBuild = '+successBuild+'%')
-  console.log('branchesVsMerges = '+branchesVsMerges+'%')
-  console.log('total = '+total+'%')
+  console.log('codeReviewed = ' + codeReviewed + '%')
+  console.log('successBuild = ' + successBuild + '%')
+  console.log('branchesVsMerges = ' + branchesVsMerges + '%')
+  console.log('total = ' + total + '%')
 
   return (total.toFixed(2))
 }
@@ -725,9 +743,8 @@ function commitsPerDev () {
     }
   }
 
-
   // convert data into unix time stamp
-  var datesPerDev = [] 
+  var datesPerDev = []
   for (var d = 0; d < commitsPerContributor.length; d++) {
     var com = commitsPerContributor[d].commits
     var dates = []
@@ -736,22 +753,22 @@ function commitsPerDev () {
       if (dummy !== null) {
         const date = new Date((dummy).substring(0, 10))
         dates.push(date.getTime())
-      }            
+      }
     }
     datesPerDev.push({
       'name': commitsPerContributor[d].name,
       'date': dates
     })
   }
-// console.log(datesPerDev)
-    // generate release table
+  // console.log(datesPerDev)
+  // generate release table
 
   for (var i = 0; i < datesPerDev.length; i++) {
     var pullDates = datesPerDev[i].date
     // convert all the dates into integers so that they can be compared
     pullDates.forEach(parseInt)
     releases.forEach(parseInt)
-    
+
     for (var j = 0; j < pullDates.length; j++) {
       var prev = 0
       for (let v = 0; v < releases.length; v++) {
@@ -766,11 +783,8 @@ function commitsPerDev () {
 
         }
         prev = releases[v]
-
       }
-     
     }
-
   }
   return comPerDev
 }
@@ -865,7 +879,7 @@ function dashboard (id, fData, releaseArray, heading) {
 
   // function to handle histogram.
   function histoGram (fD) {
-    var hG = {}, hGDim = {t: 60, r: 0, b: 30, l: 0}
+    var hG = {}, hGDim = {t: 60, r: 0, b: 100, l: 100}
     hGDim.w = 600 - hGDim.l - hGDim.r,
     hGDim.h = 400 - hGDim.t - hGDim.b
 
@@ -920,6 +934,10 @@ function dashboard (id, fData, releaseArray, heading) {
       // filter for selected state.
       var st = fData.filter(function (s) { return s.State == d[0] })[0],
         nD = d3.keys(st.freq).map(function (s) { return {type: s, freq: st.freq[s]} })
+      if (trackHoverPopUp == 0) {
+        pullRequestOverviewTip()
+        trackHoverPopUp++
+      }
 
       // call update functions of pie-chart and legend.
       pC.update(nD)
@@ -951,6 +969,18 @@ function dashboard (id, fData, releaseArray, heading) {
         .text(function (d) { return d3.format(',')(d[1]) })
         .attr('y', function (d) { return y(d[1]) - 5 })
     }
+    hGsvg.append('text')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', 0 - 60)
+      .attr('x', 0 - (hGDim.h / 2))
+      .attr('dy', '1em')
+      .style('text-anchor', 'middle')
+      .text('Quantity')
+    // text label for the x axis
+    hGsvg.append('text')
+      .attr('transform', 'translate(' + (hGDim.w / 2) + ' ,' + (hGDim.h + 40 + 20) + ')')
+      .style('text-anchor', 'middle')
+      .text('Developer Names')
     return hG
   }
 
@@ -996,6 +1026,10 @@ function dashboard (id, fData, releaseArray, heading) {
       hG.update(fData.map(function (v) {
         return [v.State, v.freq[d.data.type]]
       }), segColor(d.data.type))
+      if (trackHoverPopUp === 0) {
+        pullRequestOverviewTip()
+        trackHoverPopUp++
+      }
     }
     // Utility function to be called on mouseout a pie slice.
     function mouseout (d) {
