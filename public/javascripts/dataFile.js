@@ -6,7 +6,6 @@ $(document).ready(function () {
       title: 'Sprint Overview',
       description: 'The timeline shows the total sprints/releases for the overall project. Click the timeline to see contributions per release.'
 
-
     })
     // document.getElementById('pullReqNo').innerHTML =null;
     document.getElementById('theading').innerHTML = info
@@ -82,7 +81,7 @@ function plotTimeline () {
   var day = 1000 * 60 * 60 * 24 // this gives a day in milliseconds
   var testData = cleanData()
   const width = 1300
-  var height = 230
+  var height = 300
   var lastDate = (releaseInfo.expreleaseDates).length - 1
   var endDay = ''
   const actualLastDay = parseInt(releaseInfo.actualreleaseDates[lastDate])

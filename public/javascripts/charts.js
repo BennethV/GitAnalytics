@@ -89,7 +89,7 @@ var userInfo = {};
             'name': contributors[d].login,
             'pulls': 0
           }
-          res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/commits?author=${ contributors[d].login}&per_page=250&access_token=${userInfo.accessToken}`)
+          res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/commits?author=${contributors[d].login}&per_page=250&access_token=${userInfo.accessToken}`)
           var array = await res.json()
           commitsPerContributor.push({
             'name': contributors[d].login,
@@ -146,7 +146,7 @@ var userInfo = {};
           count++
         } // closedPulls loop ends here
         // populating pull request review objects
-        for (var q = 0 ; q < reviews.length; q++) {
+        for (var q = 0; q < reviews.length; q++) {
           // if the code was reviewed
           if (typeof (reviews[q]).length !== 'undefined' && (reviews[q]).length > 0) {
             var reviewer = ''
@@ -275,14 +275,14 @@ $(document).ready(function () {
       repos: repoList,
       statusOnMaster: statusOnMaster,
       names: names,
-      language:generalRepoData.language,
+      language: generalRepoData.language,
       tbdScore: tbdScore()
     })
     document.getElementById('frontOverview').innerHTML = overviewData
     d3.selectAll('table').remove()
     d3.selectAll('svg').remove()
     overviewPie()
-    stackedBarOverview( contributionsPerSprint, getNames())
+    stackedBarOverview(contributionsPerSprint, getNames())
 
     return false
   })
@@ -303,10 +303,11 @@ $(document).ready(function () {
     var dynamicBar = document.getElementById('dynamicChart').innerHTML
     template = Handlebars.compile(cardInfor)
     var infoCards = template({
-      card1: 'Closed Pulls:',
-      text1: closedPulls.length,
-      card2: 'Merged Pulls:',
-      text2: summary.length,
+
+      card1: 'Merged Pulls:',
+      text1: summary.length,
+      card2: 'Branches vs Merged Pulls:',
+      text2: (branches.length - 1) + '/' + summary.length,
       card3: 'Total Commits:',
       text3: totalCommits(),
       card4: 'Healthy Builds',
@@ -361,7 +362,7 @@ $(document).ready(function () {
     var template = Handlebars.compile(tableInfor)
     var commitsInfo = template({
       title: 'Commits Per Developer',
-      description:'The histogram shows the total commits made by each developer. '+
+      description: 'The histogram shows the total commits made by each developer. ' +
                 'The pie chart shows the contribution of commits per release.'
     })
     document.getElementById('theading').innerHTML = commitsInfo
@@ -385,7 +386,7 @@ $(document).ready(function () {
     // clear all svg's and tables
     d3.selectAll('svg').remove()
     d3.selectAll('table').remove()
-    
+
     var freqData = []
     var releaseArray = []
     var info = commitsPerDev()
@@ -422,11 +423,11 @@ $(document).ready(function () {
     var tableInfor = document.getElementById('table_heading_template').innerHTML
     var template = Handlebars.compile(tableInfor)
     var info = template({
-      title: 'Pull Request Per Developer',
-      description: 'Information about the pull request contributions per developer is given.' +
-                 'The pie chart shows the total pull requests per release.' +
-                  'The histogram shows the pull request contribution of each developer.' +
-                   'Both are interactive. The tables show how much each developer contributed for each release.'
+      title: 'Pull Requests Per Developer',
+      description: 'Information about the pull request contributions per developer is given. ' +
+                 'The pie chart shows the total pull requests per release. ' +
+                  'The histogram shows the pull request contribution of each developer. ' +
+                   'Both are interactive. The tables show how much each developer contributed for each release. '
 
     })
     document.getElementById('theading').innerHTML = info
@@ -438,7 +439,7 @@ $(document).ready(function () {
       card2: 'Number of Contributors',
       text2: ((getNames()).length),
       card3: 'Average Pull Request Per Dev',
-      text3: (summary.length/contributors.length)
+      text3: (summary.length / contributors.length)
 
     })
     document.getElementById('body').style.backgroundColor = 'white'
@@ -496,28 +497,28 @@ $(document).ready(function () {
 function averageCommits () {
   var total = 0
   for (let i = 0; i < commitsPerContributor.length; i++) {
-    total += ((commitsPerContributor[i]).commits).length    
+    total += ((commitsPerContributor[i]).commits).length
   }
-  return (total/commitsPerContributor.length)
+  return (total / commitsPerContributor.length)
 }
 
 function totalCommits () {
   var total = 0
   for (var i = 0; i < commitsPerContributor.length; i++) {
-    total += ((commitsPerContributor[i]).commits).length    
+    total += ((commitsPerContributor[i]).commits).length
   }
   return total
 }
 function tbdScore () {
-  var codeReviewed = ((reviews.length)/(summary.length))*(100/3)
-  var successBuild = (totalHealthyBuilds/ summary.length)*(100/3)
-  var branchesVsMerges = (branches.length/summary.length)*(100/3)
+  var codeReviewed = ((reviews.length) / (summary.length)) * (100 / 3)
+  var successBuild = (totalHealthyBuilds / summary.length) * (100 / 3)
+  var branchesVsMerges = ((branches.length - 1) / summary.length) * (100 / 3)
   var total = codeReviewed + successBuild + branchesVsMerges
   console.log('TBD Score: ')
-  console.log('codeReviewed = '+codeReviewed+'%')
-  console.log('successBuild = '+successBuild+'%')
-  console.log('branchesVsMerges = '+branchesVsMerges+'%')
-  console.log('total = '+total+'%')
+  console.log('codeReviewed = ' + codeReviewed + '%')
+  console.log('successBuild = ' + successBuild + '%')
+  console.log('branchesVsMerges = ' + branchesVsMerges + '%')
+  console.log('total = ' + total + '%')
 
   return (total.toFixed(2))
 }
@@ -725,9 +726,8 @@ function commitsPerDev () {
     }
   }
 
-
   // convert data into unix time stamp
-  var datesPerDev = [] 
+  var datesPerDev = []
   for (var d = 0; d < commitsPerContributor.length; d++) {
     var com = commitsPerContributor[d].commits
     var dates = []
@@ -736,22 +736,22 @@ function commitsPerDev () {
       if (dummy !== null) {
         const date = new Date((dummy).substring(0, 10))
         dates.push(date.getTime())
-      }            
+      }
     }
     datesPerDev.push({
       'name': commitsPerContributor[d].name,
       'date': dates
     })
   }
-// console.log(datesPerDev)
-    // generate release table
+  // console.log(datesPerDev)
+  // generate release table
 
   for (var i = 0; i < datesPerDev.length; i++) {
     var pullDates = datesPerDev[i].date
     // convert all the dates into integers so that they can be compared
     pullDates.forEach(parseInt)
     releases.forEach(parseInt)
-    
+
     for (var j = 0; j < pullDates.length; j++) {
       var prev = 0
       for (let v = 0; v < releases.length; v++) {
@@ -766,11 +766,8 @@ function commitsPerDev () {
 
         }
         prev = releases[v]
-
       }
-     
     }
-
   }
   return comPerDev
 }
