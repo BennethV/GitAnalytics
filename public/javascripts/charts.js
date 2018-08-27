@@ -421,8 +421,6 @@ $(document).ready(function () {
     for (let r = 0; r < releases.length; r++) {
       releaseArray.push('release' + (r + 1))
     }
-    dashboard('#dashboard', freqData, releaseArray, 'Commits Per Developer')
-
     trackHoverPopUp = 0
     pullRequestOverviewTip()
     dashboard('#dashboard', freqData, releaseArray, 'Commits Per Developer')
