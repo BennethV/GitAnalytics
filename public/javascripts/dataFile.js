@@ -821,7 +821,6 @@ function pullDetails () {
     (summary[i]).node_Deletions = nodeDeletion;
     (summary[i]).all_Additions = unfilteredAdds
   }
-  console.log(summary)
   stackeBarData()
 }
 
@@ -856,9 +855,6 @@ function stackeBarData () {
     (dirtyData[((summary[i]).release_id - 1)])['year'] = convertTimestamp(yr)
   }
   contributionsPerSprint = data
-  console.log(data)
-  console.log('this is dirty data')
-  console.log(dirtyData)
 
   return data
 }

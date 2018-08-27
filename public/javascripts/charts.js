@@ -18,7 +18,7 @@ var branches = []
 var commitsPerContributor = []
 var comPerDev = []
 var statusOnMaster = ''
-var acquiredData = false
+var repeatBranch = []
 var pullInfo = []
 var generalRepoData = []
 var userInfo = {};
@@ -96,17 +96,7 @@ var userInfo = {};
             commits: array
           })
         }
-        console.log(commitsPerContributor)
-        // loop through closed pull requests
-        // fetches the all the commits per pull request and the reviews
-        // This will invert the data
-        // count = 0
-        // for (var z = (closedPulls).length - 1; z >= 0; z--) {
 
-        //   res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/pulls/${closedPulls[z].number}/reviews?state=all&access_token=${userInfo.accessToken}`)
-        //   reviews[count] = await res.json()
-        //   count++
-        // }
         // This will invert the data
         count = 0
         for (var i = (closedPulls).length - 1; i >= 0; i--) {
@@ -173,7 +163,7 @@ var userInfo = {};
           }
         }
         // populate the object f  1qor contributor merged pulls
-        for (var n = contributorMergedPullReq.length - 1; n >= 0; n--) {
+        for (let n = contributorMergedPullReq.length - 1; n >= 0; n--) {
           for (let x = 0; x < summary.length; x++) {
             if (contributorMergedPullReq[n].name == summary[x].User) {
               contributorMergedPullReq[n].pulls++
@@ -215,13 +205,29 @@ var userInfo = {};
           }
         }
 
-        for (var i = 0; i < summary.length; i++) {
+        for (let i = 0; i < summary.length; i++) {
           const pullNo = (summary[i]).Pull_Request
           const result = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/pulls/${pullNo}/files?state=closed&access_token=${userInfo.accessToken}`)
           const data = await result.json()
           pullInfo.push(data)
         }
 
+        for (let p = 0; p < branches.length; p++) {
+          var total = 0
+          for (let z = 0; z < summary.length; z++) {
+            if (((summary[z]).Branch === (branches[p]).name)) {
+              total++
+            } else {
+            }
+          }
+          if (total > 1) {
+            repeatBranch.push({
+              'name': (branches[p]).name,
+              'repeated': total
+            })
+          }
+        }
+        console.log(repeatBranch)
         // generate release id and developer pull request per release
         await mergedPullPerDev()
 
@@ -246,7 +252,6 @@ function urlParam (name) {
 // href functions
 $(document).ready(function () {
   $('#frontOverview').on('click', 'a', function () {
-    // console.log($(this).text())
     userInfo.repository = $(this).text()
     window.location.href = `/charts?repository=${userInfo.repository}`
     return false
@@ -269,7 +274,7 @@ $(document).ready(function () {
     var sprintNumber = releaseInfo.actualreleaseDates.length - 1
     var names = getNames()
     var overviewData = template({
-      title: 'welcome to ' + userInfo.repository + ' Repository Statistics',
+      title: 'Welcome to ' + userInfo.repository + ' Repository Statistics',
       NumberOfSprint: sprintNumber,
       totalCommits: totalCommits(),
       repos: repoList,
@@ -407,8 +412,6 @@ $(document).ready(function () {
     for (let r = 0; r < releases.length; r++) {
       releaseArray.push('release' + (r + 1))
     }
-    console.log(freqData)
-    console.log(releaseArray)
     dashboard('#dashboard', freqData, releaseArray, 'Commits Per Developer')
 
     return false
@@ -510,10 +513,46 @@ function totalCommits () {
   return total
 }
 function tbdScore () {
-  var codeReviewed = ((reviews.length) / (summary.length)) * (100 / 3)
-  var successBuild = (totalHealthyBuilds / summary.length) * (100 / 3)
-  var branchesVsMerges = ((branches.length - 1) / summary.length) * (100 / 3)
-  var total = codeReviewed + successBuild + branchesVsMerges
+  var repeatFrequency = 0
+  var totalRepeats = 0
+  for (let index = 0; index < repeatBranch.length; index++) {
+    totalRepeats += repeatBranch[index].repeated - 1
+  }
+  repeatFrequency = (totalRepeats / (summary.length - 1)) * 100
+  repeatFrequency = repeatFrequency.toFixed(2)
+  console.log('total repeated branches : ' + total)
+  console.log('Repeat Frequency: ' + repeatFrequency)
+  var codeReviewed = 0
+  var successBuild = 0
+  var branchesVsMerges = 0
+  var total = 0
+  if (repeatFrequency <= 0) {
+    codeReviewed = ((reviews.length) / (summary.length)) * (100 / 3)
+    successBuild = (totalHealthyBuilds / summary.length) * (100 / 3)
+    branchesVsMerges = ((branches.length - 1) / summary.length) * (100 / 3)
+    total = codeReviewed + successBuild + branchesVsMerges
+  } else if (repeatFrequency <= 20.00) {
+    codeReviewed = ((reviews.length) / (summary.length)) * (80 / 3)
+    successBuild = (totalHealthyBuilds / summary.length) * (80 / 3)
+    branchesVsMerges = ((branches.length - 1) / summary.length) * (80 / 3)
+    total = codeReviewed + successBuild + branchesVsMerges
+  } else if (repeatFrequency <= 40.00) {
+    codeReviewed = ((reviews.length) / (summary.length)) * (60 / 3)
+    successBuild = (totalHealthyBuilds / summary.length) * (60 / 3)
+    branchesVsMerges = ((branches.length - 1) / summary.length) * (60 / 3)
+    total = codeReviewed + successBuild + branchesVsMerges
+  } else if (repeatFrequency <= 60.00) {
+    codeReviewed = ((reviews.length) / (summary.length)) * (40 / 3)
+    successBuild = (totalHealthyBuilds / summary.length) * (40 / 3)
+    branchesVsMerges = ((branches.length - 1) / summary.length) * (40 / 3)
+    total = codeReviewed + successBuild + branchesVsMerges
+  } else {
+    codeReviewed = ((reviews.length) / (summary.length)) * (20 / 3)
+    successBuild = (totalHealthyBuilds / summary.length) * (20 / 3)
+    branchesVsMerges = ((branches.length - 1) / summary.length) * (20 / 3)
+    total = codeReviewed + successBuild + branchesVsMerges
+  }
+
   console.log('TBD Score: ')
   console.log('codeReviewed = ' + codeReviewed + '%')
   console.log('successBuild = ' + successBuild + '%')
@@ -743,9 +782,6 @@ function commitsPerDev () {
       'date': dates
     })
   }
-  // console.log(datesPerDev)
-  // generate release table
-
   for (var i = 0; i < datesPerDev.length; i++) {
     var pullDates = datesPerDev[i].date
     // convert all the dates into integers so that they can be compared
@@ -758,7 +794,6 @@ function commitsPerDev () {
         if ((pullDates[j] > prev) && (pullDates[j] <= releases[v])) {
           for (var k = 0; k < comPerDev.length; k++) {
             if (comPerDev[k].name === (datesPerDev[i]).name) {
-              console.log(comPerDev[k].name);
               ((comPerDev[k]).release[v]).commits++
             }
           }

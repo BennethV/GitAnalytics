@@ -12,7 +12,6 @@ var selectedOrg = ''
 var repoList = []
 var repoNames = []
 var fs = require('fs')
-var proxy = process.env.http_proxy || 'http://students%5C1077310:18Barnato@1051@proxyss.wits.ac.za:80'
 var userInfo = {
   'accessToken': '',
   'username': '',
@@ -29,26 +28,48 @@ router.post('/', function (req, res, next) {
     try {
       // from here we can then add the URLs for statistics using our synchronous functions.
       // This gets information about the user
-
-      await request
-        .get('https://api.github.com/user')
-        .proxy(proxy)
-        .set('Authorization', 'token ' + accessToken)
-        .set('accept', 'application/json')
-        .then(async function (results) {
-          // Gets list of organizations that the user has
-          await request
-            .get(results.body.organizations_url)
-            .proxy(proxy)
-            .set('Authorization', 'token ' + accessToken)
-            .set('accept', 'application/json')
-            .then(function (organizations) {
-              orgs = organizations.body // a for lop for putiting the organizaions into an array
-              for (var i = 0; i < orgs.length; i++) {
-                orgNames[i] = orgs[i].login
-              }
-            })
-        })
+      console.log(process.env.PROXY_REQUIRED)
+      if (process.env.PROXY_REQUIRED === 'true') {
+        console.log('Proxies being used')
+        await request
+          .get('https://api.github.com/user')
+          .proxy(process.env.HTTP_PROXY)
+          .set('Authorization', 'token ' + accessToken)
+          .set('accept', 'application/json')
+          .then(async function (results) {
+            // Gets list of organizations that the user has
+            await request
+              .get(results.body.organizations_url)
+              .proxy(process.env.HTTP_PROXY)
+              .set('Authorization', 'token ' + accessToken)
+              .set('accept', 'application/json')
+              .then(function (organizations) {
+                orgs = organizations.body // a for lop for putiting the organizaions into an array
+                for (var i = 0; i < orgs.length; i++) {
+                  orgNames[i] = orgs[i].login
+                }
+              })
+          })
+      } else {
+        console.log('No proxies being used')
+        await request
+          .get('https://api.github.com/user')
+          .set('Authorization', 'token ' + accessToken)
+          .set('accept', 'application/json')
+          .then(async function (results) {
+            // Gets list of organizations that the user has
+            await request
+              .get(results.body.organizations_url)
+              .set('Authorization', 'token ' + accessToken)
+              .set('accept', 'application/json')
+              .then(function (organizations) {
+                orgs = organizations.body // a for lop for putiting the organizaions into an array
+                for (var i = 0; i < orgs.length; i++) {
+                  orgNames[i] = orgs[i].login
+                }
+              })
+          })
+      }
       res.render('organisation', {orgNames: orgNames})
     } catch (err) { console.log(err) }
   })()
@@ -58,22 +79,39 @@ router.get('/orgDetails/:id', function (req, res, next) {
   const currentOrg = orgs[req.params.id]
   selectedOrg = currentOrg.login
   userInfo.organisation = currentOrg.login
-  const repoUrl = currentOrg.repos_url;
-
-  (async function () {
-    await request
-      .get(repoUrl)
-      .proxy(proxy)
-      .set('Authorization', 'token ' + accessToken)
-      .set('accept', 'application/json')
-      .then(function (repos) {
-        repoList = repos.body
-        for (var i = 0; i < repoList.length; i++) {
-          repoNames[i] = repoList[i].name
-        }
-      })
-    await res.render('organisation', {repoNames: repoNames})
-  })()
+  const repoUrl = currentOrg.repos_url
+  if (process.env.PROXY_REQUIRED === 'true') {
+    (async function () {
+      console.log('Proxies being used')
+      await request
+        .get(repoUrl)
+        .proxy(process.env.HTTP_PROXY)
+        .set('Authorization', 'token ' + accessToken)
+        .set('accept', 'application/json')
+        .then(function (repos) {
+          repoList = repos.body
+          for (var i = 0; i < repoList.length; i++) {
+            repoNames[i] = repoList[i].name
+          }
+        })
+      await res.render('organisation', {repoNames: repoNames})
+    })()
+  } else {
+    (async function () {
+      console.log('No proxies being used')
+      await request
+        .get(repoUrl)
+        .set('Authorization', 'token ' + accessToken)
+        .set('accept', 'application/json')
+        .then(function (repos) {
+          repoList = repos.body
+          for (var i = 0; i < repoList.length; i++) {
+            repoNames[i] = repoList[i].name
+          }
+        })
+      await res.render('organisation', {repoNames: repoNames})
+    })()
+  }
 })
 
 router.get('/charts/:id', function (req, res, next) {
