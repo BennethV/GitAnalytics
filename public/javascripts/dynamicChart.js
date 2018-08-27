@@ -16,7 +16,7 @@ function dynamicChart () {
     })
 
   // some variables declarations
-  var margin = {top: 20, right: 50, bottom: 30, left: 80},
+  var margin = {top: 20, right: 50, bottom: 100, left: 150},
     width = 800 - margin.left - margin.right,
     height = 400 - margin.top - margin.bottom
 
@@ -99,6 +99,18 @@ function dynamicChart () {
 
     svg.selectAll('.axis.x').call(xAxis)
     svg.selectAll('.axis.y').call(yAxis)
+    svg.append('text')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', 0 - 120)
+      .attr('x', 0 - (height / 2) - 50)
+      .attr('dy', '1em')
+      .style('text-anchor', 'middle')
+      .text('Dates')
+
+    svg.append('text')
+      .attr('transform', 'translate(' + (width / 2) + ' ,' + (height + 80) + ')')
+      .style('text-anchor', 'middle')
+      .text('Quantity')
 
     var state = svg.selectAll('.state')
       .data(statesData)

@@ -21,7 +21,8 @@ var statusOnMaster = ''
 var repeatBranch = []
 var pullInfo = []
 var generalRepoData = []
-var userInfo = {};
+var userInfo = {}
+var trackHoverPopUp = 0;
 
 (async function () {
   // show loading gif when starting to acquire data
@@ -34,8 +35,8 @@ var userInfo = {};
       userInfo = await JSON.parse(data)
       if (rep) {
         userInfo.repository = rep
-
       }
+
       getReleases()
       try {
         var count = 0
@@ -264,6 +265,7 @@ $(document).ready(function () {
     document.getElementById('3cards').innerHTML = null
     document.getElementById('defaulView').innerHTML = null
     document.getElementById('dynamicBarGraph').innerHTML = null
+    document.getElementById('popupDetail').innerHTML = null
     var overViewInfo = document.getElementById('overviewLayout-template').innerHTML
     var template = Handlebars.compile(overViewInfo)
     var sprintNumber = releaseInfo.actualreleaseDates.length - 1
@@ -282,7 +284,15 @@ $(document).ready(function () {
     d3.selectAll('table').remove()
     d3.selectAll('svg').remove()
     overviewPie()
-    stackedBarOverview(contributionsPerSprint, getNames())
+    if (grouptValidation) {
+      stackedBarOverview(contributionsPerSprint, getNames())
+    } else {
+      alert('This group has missing information.\n' +
+        'POSSIBLE REASONS:\n' +
+        '                  - Master has been Renamed\n' +
+        '                  - Branches are deleted\n' +
+        '                  - Pull requests are much leass than releases\n(master released multiple times with no changes)\n')
+    }
 
     return false
   })
@@ -319,6 +329,7 @@ $(document).ready(function () {
     document.getElementById('3cards').innerHTML = null
     document.getElementById('defaulView').innerHTML = null
     document.getElementById('cards').innerHTML = infoCards
+    document.getElementById('popupDetail').innerHTML = null
     await genSummaryTable(summary)
     dynamicChart()
     return false
@@ -352,6 +363,7 @@ $(document).ready(function () {
 
     var dynamicBar = document.getElementById('dynamicChart').innerHTML
     document.getElementById('dynamicBarGraph').innerHTML = dynamicBar
+    document.getElementById('popupDetail').innerHTML = null
     await genReviewTable(pullReview)
     dynamicChart()
     return false
@@ -367,6 +379,7 @@ $(document).ready(function () {
     })
     document.getElementById('theading').innerHTML = commitsInfo
     var cardInfor = document.getElementById('cards_template').innerHTML
+    var popUpInfor = document.getElementById('popUp_template').innerHTML
     template = Handlebars.compile(cardInfor)
     var infoCards = template({
       card1: 'Total Commits',
@@ -381,6 +394,7 @@ $(document).ready(function () {
     document.getElementById('frontOverview').innerHTML = null
     document.getElementById('3cards').innerHTML = null
     document.getElementById('defaulView').innerHTML = null
+    document.getElementById('popupDetail').innerHTML = popUpInfor
 
     document.getElementById('cards').innerHTML = infoCards
     // clear all svg's and tables
@@ -409,6 +423,9 @@ $(document).ready(function () {
     }
     dashboard('#dashboard', freqData, releaseArray, 'Commits Per Developer')
 
+    trackHoverPopUp = 0
+    pullRequestOverviewTip()
+    dashboard('#dashboard', freqData, releaseArray, 'Commits Per Developer')
     return false
   })
 
@@ -419,6 +436,7 @@ $(document).ready(function () {
   })
   $('#pullPerDev').click(async function () {
     var tableInfor = document.getElementById('table_heading_template').innerHTML
+    var popUpInfor = document.getElementById('popUp_template').innerHTML
     var template = Handlebars.compile(tableInfor)
     var info = template({
       title: 'Pull Requests Per Developer',
@@ -442,7 +460,7 @@ $(document).ready(function () {
     })
     document.getElementById('body').style.backgroundColor = 'white'
     document.getElementById('frontOverview').innerHTML = null
-
+    document.getElementById('popupDetail').innerHTML = popUpInfor
     document.getElementById('3cards').innerHTML = null
     document.getElementById('dynamicBarGraph').innerHTML = null
     document.getElementById('cards').innerHTML = infoCards
@@ -489,6 +507,8 @@ $(document).ready(function () {
     for (let i = 0; i < tableData.length; i++) {
       await tabulate(tableData[i].data, tableData[i].column, tableData[i].div)
     }
+    trackHoverPopUp = 0
+    pullRequestOverviewTip()
     return false
   })
 })
@@ -884,7 +904,7 @@ function dashboard (id, fData, releaseArray, heading) {
 
   // function to handle histogram.
   function histoGram (fD) {
-    var hG = {}, hGDim = {t: 60, r: 0, b: 30, l: 0}
+    var hG = {}, hGDim = {t: 60, r: 0, b: 100, l: 100}
     hGDim.w = 600 - hGDim.l - hGDim.r,
     hGDim.h = 400 - hGDim.t - hGDim.b
 
@@ -939,6 +959,10 @@ function dashboard (id, fData, releaseArray, heading) {
       // filter for selected state.
       var st = fData.filter(function (s) { return s.State == d[0] })[0],
         nD = d3.keys(st.freq).map(function (s) { return {type: s, freq: st.freq[s]} })
+      if (trackHoverPopUp == 0) {
+        pullRequestOverviewTip()
+        trackHoverPopUp++
+      }
 
       // call update functions of pie-chart and legend.
       pC.update(nD)
@@ -970,6 +994,18 @@ function dashboard (id, fData, releaseArray, heading) {
         .text(function (d) { return d3.format(',')(d[1]) })
         .attr('y', function (d) { return y(d[1]) - 5 })
     }
+    hGsvg.append('text')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', 0 - 60)
+      .attr('x', 0 - (hGDim.h / 2))
+      .attr('dy', '1em')
+      .style('text-anchor', 'middle')
+      .text('Quantity')
+    // text label for the x axis
+    hGsvg.append('text')
+      .attr('transform', 'translate(' + (hGDim.w / 2) + ' ,' + (hGDim.h + 40 + 20) + ')')
+      .style('text-anchor', 'middle')
+      .text('Developer Names')
     return hG
   }
 
@@ -1015,6 +1051,10 @@ function dashboard (id, fData, releaseArray, heading) {
       hG.update(fData.map(function (v) {
         return [v.State, v.freq[d.data.type]]
       }), segColor(d.data.type))
+      if (trackHoverPopUp === 0) {
+        pullRequestOverviewTip()
+        trackHoverPopUp++
+      }
     }
     // Utility function to be called on mouseout a pie slice.
     function mouseout (d) {

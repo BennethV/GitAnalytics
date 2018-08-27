@@ -10,14 +10,15 @@
  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   </link>
 
-  
-  
+   <link href='https://cdn.rawgit.com/mochajs/mocha/2.2.5/mocha.css' rel='stylesheet' />
 
   <!-- You can download Handlebars at http:// handlebarsjs.com/ and save it as handlebars-v4.0.2.js on your site. Then make it available by adding the following line. -->
   <style type="text/css">
 td, th {
   padding: 4px 10px;
 }
+
+
   </style>
 
  <script src="http://builds.handlebarsjs.com.s3.amazonaws.com/handlebars-v4.0.11.js"></script>
@@ -25,9 +26,19 @@ td, th {
 <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script type="text/javascript" src="/cdn/javascripts/dataFile.js"></script>
 <script type="text/javascript" src="/cdn/javascripts/dynamicChart.js"></script>
+
 <script src="../../cdn/d3/d3-timeline.js"></script>
 </head>
 <body id = 'body'>
+
+
+  <script src='https://cdn.rawgit.com/mochajs/mocha/2.2.5/mocha.js'></script>
+  <script src='https://cdn.rawgit.com/chaijs/chai/2.3.0/chai.js'></script>
+  <script>window.onerror=function(msg,url,line){
+    document.getElementById('mocha').innerHTML+='<h1>'+msg+'</'+'h1>'+'<h2>'+url+':'+line+'</'+'h2>';
+  return false}</script>
+  <script>mocha.setup('bdd')</script>
+  
 
   <div id = "sidenav" class="sidenav">
     <a id = "overview" href="#overview" >Overview</a>
@@ -53,7 +64,7 @@ td, th {
   <div class="main">
       <!-- It is better to separate your template from the JS and you do that by placing the template in its own tag -->
     
-
+<div id='mocha'></div>
 <!--  code from James-->
 
 <div id="frontOverview"></div>
@@ -178,13 +189,8 @@ td, th {
         </div>
 
       </script>
-      <script id='specialPopup' type="text/x-handlebars-template"><div style="text-align:center" class="popup">
-          <span class="popuptext" id="myPopup">A Simple Popup!</span>
-      </div>
-        
-      </script>
-      <div id=popUpContainer></div>
 
+      <div id="popupDetail"></div>
       <div id='dashboard'></div>
 
 
@@ -198,7 +204,9 @@ td, th {
             <button class='button button3' type="button" id='myBtn' align="right">'Click for default view'</button>
           
         </div>
-
+        <div class="popup" align='right' style="left: 400px"">
+        <span class="popuptext" id="myPopup">Click timeline bars to see developer contribution for each sprint</span>
+        </div>
       </script>
       <div class = "row">
            <div>
@@ -215,6 +223,7 @@ td, th {
           <div>
 
       <div id="summary"></div>
+      
 
       <div class = "row">       
         <div>
@@ -230,6 +239,7 @@ td, th {
       <div id="info"></div>
       <div id = 'dynamicBarGraph'></div>
       <script id='dynamicChart' type="text/x-handlebars-template">
+
         <h2>General Trend chart: Comparison of multiple project statistics</h2>
         <div style='background-color: #F2EDE4'>
                  <div style='background-color: #F2EDE4' class="container" style="margin-top: 20px;">
@@ -251,7 +261,15 @@ td, th {
       </script>          
       </div>
 
+<script id="popUp_template" type="text/x-handlebars-template">
 
+      <div class="popup" style="left: 400px">
+        <span class="popuptext" id="pullPop1"> '1.' Hover on the histogram to see the developer contributions per release on the pie chart.</span>
+      </div>
+      <div class="popup" style="left: 800px;">
+        <span class="popuptext" id="pullPop2"> '2.' Hover the pie Chart to see contributions of each developer on that release</span>
+      </div>
+</script>
 
       <script>
 
@@ -297,8 +315,14 @@ function filterFunction() {
         }
     }
 }
+
 </script>
 
+
+<script type="text/javascript" src="/cdn/javascripts/unitTests.js"></script>
+<script>
+    mocha.run();
+</script>
 
 </body>
 </html>
