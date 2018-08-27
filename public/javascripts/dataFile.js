@@ -832,7 +832,6 @@ function pullDetails () {
     (summary[i]).node_Deletions = nodeDeletion;
     (summary[i]).all_Additions = unfilteredAdds
   }
-  console.log(summary)
   stackeBarData()
 }
 
@@ -840,7 +839,6 @@ function stackeBarData () {
 //  console.log('stacked bar data start')
   releaseDates = releaseInfo.actualreleaseDates
   var data = []
-  console.log(summary)
   const names = getNames()
   if (summary.length < releaseDates.length) {
     grouptValidation = false
@@ -869,9 +867,6 @@ function stackeBarData () {
       (dirtyData[((summary[i]).release_id - 1)])['year'] = convertTimestamp(yr)
     }
     contributionsPerSprint = data
-    console.log(data)
-    console.log('this is dirty data')
-    console.log(dirtyData)
 
     return data
   }

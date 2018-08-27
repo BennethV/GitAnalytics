@@ -35,10 +35,8 @@ var trackHoverPopUp = 0;
       userInfo = await JSON.parse(data)
       if (rep) {
         userInfo.repository = rep
-
-        console.log('New Repo: ' + rep)
       }
-      console.log(userInfo)
+
       getReleases()
       try {
         var count = 0
@@ -79,7 +77,7 @@ var trackHoverPopUp = 0;
             'repo': (repos[i]).name
           })
         }
-        console.log('Started fetching all the information')
+
         // populate the object that stores the information per developer
         for (var d = contributors.length - 1; d >= 0; d--) {
           contributorClosedPullReq[d] = {
@@ -97,7 +95,7 @@ var trackHoverPopUp = 0;
             commits: array
           })
         }
-        console.log(commitsPerContributor)
+
         // loop through closed pull requests
         // fetches the all the commits per pull request and the reviews
         // This will invert the data
@@ -228,7 +226,7 @@ var trackHoverPopUp = 0;
 
         // this function plots the bar graphs under sprints
         await pullDetails()
-        console.log('Done fetching all the information')
+
         acquiredData = true
       } catch (err) { console.log(err) }
       document.getElementById('loader').style.display = 'none'
@@ -420,8 +418,7 @@ $(document).ready(function () {
     for (let r = 0; r < releases.length; r++) {
       releaseArray.push('release' + (r + 1))
     }
-    console.log(freqData)
-    console.log(releaseArray)
+
     trackHoverPopUp = 0
     pullRequestOverviewTip()
     dashboard('#dashboard', freqData, releaseArray, 'Commits Per Developer')
@@ -531,11 +528,6 @@ function tbdScore () {
   var successBuild = (totalHealthyBuilds / summary.length) * (100 / 3)
   var branchesVsMerges = (branches.length / summary.length) * (100 / 3)
   var total = codeReviewed + successBuild + branchesVsMerges
-  console.log('TBD Score: ')
-  console.log('codeReviewed = ' + codeReviewed + '%')
-  console.log('successBuild = ' + successBuild + '%')
-  console.log('branchesVsMerges = ' + branchesVsMerges + '%')
-  console.log('total = ' + total + '%')
 
   return (total.toFixed(2))
 }
@@ -775,7 +767,6 @@ function commitsPerDev () {
         if ((pullDates[j] > prev) && (pullDates[j] <= releases[v])) {
           for (var k = 0; k < comPerDev.length; k++) {
             if (comPerDev[k].name === (datesPerDev[i]).name) {
-              console.log(comPerDev[k].name);
               ((comPerDev[k]).release[v]).commits++
             }
           }
