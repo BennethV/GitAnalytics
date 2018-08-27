@@ -35,9 +35,7 @@ var userInfo = {};
       if (rep) {
         userInfo.repository = rep
 
-        console.log('New Repo: ' + rep)
       }
-      console.log(userInfo)
       getReleases()
       try {
         var count = 0
@@ -78,7 +76,6 @@ var userInfo = {};
             'repo': (repos[i]).name
           })
         }
-        console.log('Started fetching all the information')
         // populate the object that stores the information per developer
         for (var d = contributors.length - 1; d >= 0; d--) {
           contributorClosedPullReq[d] = {
@@ -227,13 +224,11 @@ var userInfo = {};
             })
           }
         }
-        console.log(repeatBranch)
         // generate release id and developer pull request per release
         await mergedPullPerDev()
 
         // this function plots the bar graphs under sprints
         await pullDetails()
-        console.log('Done fetching all the information')
         acquiredData = true
       } catch (err) { console.log(err) }
       document.getElementById('loader').style.display = 'none'
@@ -520,8 +515,6 @@ function tbdScore () {
   }
   repeatFrequency = (totalRepeats / (summary.length - 1)) * 100
   repeatFrequency = repeatFrequency.toFixed(2)
-  console.log('total repeated branches : ' + total)
-  console.log('Repeat Frequency: ' + repeatFrequency)
   var codeReviewed = 0
   var successBuild = 0
   var branchesVsMerges = 0
@@ -552,12 +545,6 @@ function tbdScore () {
     branchesVsMerges = ((branches.length - 1) / summary.length) * (20 / 3)
     total = codeReviewed + successBuild + branchesVsMerges
   }
-
-  console.log('TBD Score: ')
-  console.log('codeReviewed = ' + codeReviewed + '%')
-  console.log('successBuild = ' + successBuild + '%')
-  console.log('branchesVsMerges = ' + branchesVsMerges + '%')
-  console.log('total = ' + total + '%')
 
   return (total.toFixed(2))
 }

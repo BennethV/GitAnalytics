@@ -28,9 +28,8 @@ router.post('/', function (req, res, next) {
     try {
       // from here we can then add the URLs for statistics using our synchronous functions.
       // This gets information about the user
-      console.log(process.env.PROXY_REQUIRED)
+      // first check whether user wants to use proxies or not
       if (process.env.PROXY_REQUIRED === 'true') {
-        console.log('Proxies being used')
         await request
           .get('https://api.github.com/user')
           .proxy(process.env.HTTP_PROXY)
@@ -51,7 +50,6 @@ router.post('/', function (req, res, next) {
               })
           })
       } else {
-        console.log('No proxies being used')
         await request
           .get('https://api.github.com/user')
           .set('Authorization', 'token ' + accessToken)
@@ -82,7 +80,6 @@ router.get('/orgDetails/:id', function (req, res, next) {
   const repoUrl = currentOrg.repos_url
   if (process.env.PROXY_REQUIRED === 'true') {
     (async function () {
-      console.log('Proxies being used')
       await request
         .get(repoUrl)
         .proxy(process.env.HTTP_PROXY)
@@ -98,7 +95,6 @@ router.get('/orgDetails/:id', function (req, res, next) {
     })()
   } else {
     (async function () {
-      console.log('No proxies being used')
       await request
         .get(repoUrl)
         .set('Authorization', 'token ' + accessToken)
