@@ -6,16 +6,16 @@ $(document).ready(function () {
       title: 'Sprint Overview',
       description: 'The timeline shows the total sprints/releases for the overall project. Click the timeline to see contributions per release.'
 
-
     })
     // document.getElementById('pullReqNo').innerHTML =null;
     document.getElementById('theading').innerHTML = info
     d3.selectAll('table').remove()
     d3.selectAll('svg').remove()
     plotTimeline()
-    stackedBarDirtyData(dirtyData, getNames())
+    if (grouptValidation) {
+      stackedBarDirtyData(dirtyData, getNames())
+    }
     var cardInfor = document.getElementById('3cards_template').innerHTML
-    var popUpInfo = document.getElementById('specialPopup').innerHTML
     template = Handlebars.compile(cardInfor)
     var sprintNumber = releaseInfo.actualreleaseDates.length - 1
     var infoCards = template({
@@ -29,20 +29,25 @@ $(document).ready(function () {
     document.getElementById('cards').innerHTML = infoCards
     document.getElementById('frontOverview').innerHTML = null
     document.getElementById('3cards').innerHTML = null
-    document.getElementById('popUpContainer').innerHTML = popUpInfo
     document.getElementById('body').style.backgroundColor = 'white'
     document.getElementById('dynamicBarGraph').innerHTML = null
     var sprintButton = document.getElementById('button_template').innerHTML
     document.getElementById('defaulView').innerHTML = sprintButton
-    togglePopUp()
+    document.getElementById('popupDetail').innerHTML = null
+    togglePopup()
+    popTrack = 0
     return false
   })
   $('body').on('click', '#myBtn', function () {
     d3.selectAll('table').remove()
     d3.selectAll('svg').remove()
     plotTimeline()
-    stackedBarDirtyData(dirtyData, getNames())
+    if (grouptValidation) {
+      stackedBarDirtyData(dirtyData, getNames())
+    }
     dynamicBarData()
+    togglePopup()
+    popTrack = 0
     return false
   })
 })
@@ -57,6 +62,8 @@ var SprintLength = ''
 var startDate = ''
 var graphState = []
 var dirtyData = []
+var popTrack = 0
+var grouptValidation = true
 // settingup the div for stackedgraphs
 
 // fetches the release information from github
@@ -82,7 +89,7 @@ function plotTimeline () {
   var day = 1000 * 60 * 60 * 24 // this gives a day in milliseconds
   var testData = cleanData()
   const width = 1300
-  var height = 230
+  var height = 300
   var lastDate = (releaseInfo.expreleaseDates).length - 1
   var endDay = ''
   const actualLastDay = parseInt(releaseInfo.actualreleaseDates[lastDate])
@@ -111,7 +118,10 @@ function plotTimeline () {
       .margin({left: 0, right: 30, top: 0, bottom: 0})
       .click(function (d, i, datum) {
         const relDetails = releaseDetais(i)
-
+        if (popTrack === 0) {
+          togglePopup()
+        }
+        popTrack++
         var devNames = getNames()
         var sprintBarInfo = sprintBarData(devNames, contributionsPerSprint, i)
 
@@ -822,7 +832,6 @@ function pullDetails () {
     (summary[i]).node_Deletions = nodeDeletion;
     (summary[i]).all_Additions = unfilteredAdds
   }
-  console.log(summary)
   stackeBarData()
 }
 
@@ -830,38 +839,37 @@ function stackeBarData () {
 //  console.log('stacked bar data start')
   releaseDates = releaseInfo.actualreleaseDates
   var data = []
-
   const names = getNames()
-
-  for (var i = 0; i < releaseDates.length - 1; i++) {
-    var obj = {}
-    var obj2 = {}
-    for (var j = 0; j < names.length; j++) {
-      obj[names[j]] = 0
-      obj2[names[j]] = 0
+  if (summary.length < releaseDates.length) {
+    grouptValidation = false
+  } else {
+    for (var i = 0; i < releaseDates.length - 1; i++) {
+      var obj = {}
+      var obj2 = {}
+      for (var j = 0; j < names.length; j++) {
+        obj[names[j]] = 0
+        obj2[names[j]] = 0
+      }
+      data[i] = obj
+      dirtyData[i] = obj2
     }
-    data[i] = obj
-    dirtyData[i] = obj2
+    // console.log(data[i])
+
+    for (var i = 0; i < summary.length; i++) {
+      var index = ((summary[i]).release_id - 1);
+
+      (data[index])[(summary[i]).User] += (summary[i]).additions;
+      (dirtyData[index])[(summary[i]).User] += (summary[i]).all_Additions
+      // console.log(data[index])
+      var yr = releaseDates[((summary[i]).release_id)];
+      // console.log(yr);
+      (data[((summary[i]).release_id - 1)])['year'] = convertTimestamp(yr);
+      (dirtyData[((summary[i]).release_id - 1)])['year'] = convertTimestamp(yr)
+    }
+    contributionsPerSprint = data
+
+    return data
   }
-  // console.log(data[i])
-
-  for (var i = 0; i < summary.length; i++) {
-    var index = ((summary[i]).release_id - 1);
-
-    (data[index])[(summary[i]).User] += (summary[i]).additions;
-    (dirtyData[index])[(summary[i]).User] += (summary[i]).all_Additions
-    // console.log(data[index])
-    var yr = releaseDates[((summary[i]).release_id)];
-    // console.log(yr);
-    (data[((summary[i]).release_id - 1)])['year'] = convertTimestamp(yr);
-    (dirtyData[((summary[i]).release_id - 1)])['year'] = convertTimestamp(yr)
-  }
-  contributionsPerSprint = data
-  console.log(data)
-  console.log('this is dirty data')
-  console.log(dirtyData)
-
-  return data
 }
 
 function getNames () {
@@ -1017,10 +1025,12 @@ function sprintBarData (names, devContributions, index) {
   return cleanSprintData
 }
 
-function togglePopUp () {
-  var popup = document.getElementById('popUpContainer')
+// When the user clicks on div, open the popup
+/* function myFunction () {
+  var popup = document.getElementById('lastTry')
   popup.classList.toggle('show')
 }
+*/
 // need to sort out the stats
 function dynamicBarData () {
   // var trendData = ['Total Commits', 'Total Pull Request', 'Reviewed Pull Request', 'State', 'Commits On master', 'middleAge', 'retired']
@@ -1057,7 +1067,17 @@ function dynamicBarData () {
 
   return dynamicGraphData
 }
+function togglePopup () {
+  var popup = document.getElementById('myPopup')
+  popup.classList.toggle('show')
+}
 
+function pullRequestOverviewTip () {
+  var popup1 = document.getElementById('pullPop1')
+  popup1.classList.toggle('show')
+  var popup2 = document.getElementById('pullPop2')
+  popup2.classList.toggle('show')
+}
 /*
 function getBranchLife () {
   for (var i = 0; i < branches.length; i++) {
