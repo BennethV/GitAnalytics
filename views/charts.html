@@ -10,8 +10,7 @@
  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   </link>
 
-  
-  
+   <link href='https://cdn.rawgit.com/mochajs/mocha/2.2.5/mocha.css' rel='stylesheet' />
 
   <!-- You can download Handlebars at http:// handlebarsjs.com/ and save it as handlebars-v4.0.2.js on your site. Then make it available by adding the following line. -->
   <style type="text/css">
@@ -27,9 +26,19 @@ td, th {
 <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script type="text/javascript" src="/cdn/javascripts/dataFile.js"></script>
 <script type="text/javascript" src="/cdn/javascripts/dynamicChart.js"></script>
+
 <script src="../../cdn/d3/d3-timeline.js"></script>
 </head>
 <body id = 'body'>
+
+
+  <script src='https://cdn.rawgit.com/mochajs/mocha/2.2.5/mocha.js'></script>
+  <script src='https://cdn.rawgit.com/chaijs/chai/2.3.0/chai.js'></script>
+  <script>window.onerror=function(msg,url,line){
+    document.getElementById('mocha').innerHTML+='<h1>'+msg+'</'+'h1>'+'<h2>'+url+':'+line+'</'+'h2>';
+  return false}</script>
+  <script>mocha.setup('bdd')</script>
+  
 
   <div id = "sidenav" class="sidenav">
     <a id = "overview" href="#overview" >Overview</a>
@@ -55,7 +64,7 @@ td, th {
   <div class="main">
       <!-- It is better to separate your template from the JS and you do that by placing the template in its own tag -->
     
-
+<div id='mocha'></div>
 <!--  code from James-->
 
 <div id="frontOverview"></div>
@@ -252,7 +261,7 @@ td, th {
       </script>          
       </div>
 
-<script id="popUp_template">
+<script id="popUp_template" type="text/x-handlebars-template">
 
       <div class="popup" style="left: 400px">
         <span class="popuptext" id="pullPop1"> '1.' Hover on the histogram to see the developer contributions per release on the pie chart.</span>
@@ -309,6 +318,11 @@ function filterFunction() {
 
 </script>
 
+
+<script type="text/javascript" src="/cdn/javascripts/unitTests.js"></script>
+<script>
+    mocha.run();
+</script>
 
 </body>
 </html>
