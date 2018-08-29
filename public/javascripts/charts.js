@@ -94,7 +94,6 @@ var trackHoverPopUp = 0;
             commits: array
           })
         }
-
         // This will invert the data
         count = 0
         for (var i = (closedPulls).length - 1; i >= 0; i--) {
@@ -111,28 +110,13 @@ var trackHoverPopUp = 0;
               contributorClosedPullReq[n].pulls++
             }
           }
-          // populates the merged pull request object called 'summary'
-          var mergeDate = 0
           if ((closedPulls[i].merged_at !== null) && (closedPulls[i].base.ref === 'master')) {
             res = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/pulls/${closedPulls[i].number}/reviews?per_page=250&state=all&access_token=${userInfo.accessToken}`)
             reviews.push(await res.json())
-            mergeDate = closedPulls[i].merged_at
-            summary.push({
-              'Pull_Request': closedPulls[i].number,
-              'User': closedPulls[i].user.login,
-              'Merge_Date': mergeDate,
-              'Message': closedPulls[i].body,
-              'Total_Commits': 0,
-              'Branch': closedPulls[i].head.ref,
-              'additions': '',
-              'normal_Delitions': '',
-              'node_Additions': '',
-              'node_Deletions': '',
-              'all_Additions': ''
-            })
           }
-          count++
-        } // closedPulls loop ends here
+        }
+        // update summary object which contains pull request information
+        summary = await pullRequestInfo(closedPulls)
         // populating pull request review objects
         for (var q = 0; q < reviews.length; q++) {
           // if the code was reviewed
@@ -210,30 +194,24 @@ var trackHoverPopUp = 0;
           pullInfo.push(data)
         }
 
-        for (let p = 0; p < branches.length; p++) {
-          var total = 0
-          for (let z = 0; z < summary.length; z++) {
-            if (((summary[z]).Branch === (branches[p]).name)) {
-              total++
-            } else {
-            }
-          }
-          if (total > 1) {
-            repeatBranch.push({
-              'name': (branches[p]).name,
-              'repeated': total
-            })
-          }
-        }
+        // count how many branches were repeated
+        await repeatedBranch()
         // generate release id and developer pull request per release
         await mergedPullPerDev()
 
         // this function plots the bar graphs under sprints
-        await pullDetails()
+        var tempPullInfo = JSON.parse(JSON.stringify(pullInfo))
+        var tempSummary = JSON.parse(JSON.stringify(summary))
+        summary = JSON.parse(JSON.stringify(pullDetails(tempPullInfo,tempSummary)))
+        stackeBarData()
         acquiredData = true
       } catch (err) { console.log(err) }
       document.getElementById('loader').style.display = 'none'
-      $('#overview').trigger('click')
+      if (document.getElementById('mocha')) {
+
+      } else {
+        $('#overview').trigger('click')
+      }
     })
   return false
 })()
@@ -278,8 +256,9 @@ $(document).ready(function () {
       statusOnMaster: statusOnMaster,
       names: names,
       language: generalRepoData.language,
-      tbdScore: tbdScore()
+      tbdScore: tbdScore(repeatBranch, branches, summary, pullReview, totalHealthyBuilds)
     })
+
     document.getElementById('frontOverview').innerHTML = overviewData
     d3.selectAll('table').remove()
     d3.selectAll('svg').remove()
@@ -525,48 +504,89 @@ function totalCommits () {
   }
   return total
 }
-function tbdScore () {
+function tbdScore (repBranches, branchArray, pulls, reviewedPulls, passedBuilds) {
   var repeatFrequency = 0
   var totalRepeats = 0
-  for (let index = 0; index < repeatBranch.length; index++) {
-    totalRepeats += repeatBranch[index].repeated - 1
+  for (let index = 0; index < repBranches.length; index++) {
+    totalRepeats += repBranches[index].repeated - 1
   }
-  repeatFrequency = (totalRepeats / (summary.length - 1)) * 100
+  repeatFrequency = (totalRepeats / (pulls.length)) * 100
   repeatFrequency = repeatFrequency.toFixed(2)
   var codeReviewed = 0
   var successBuild = 0
   var branchesVsMerges = 0
   var total = 0
   if (repeatFrequency <= 0) {
-    codeReviewed = ((reviews.length) / (summary.length)) * (100 / 3)
-    successBuild = (totalHealthyBuilds / summary.length) * (100 / 3)
-    branchesVsMerges = ((branches.length - 1) / summary.length) * (100 / 3)
+    codeReviewed = ((reviewedPulls.length) / (pulls.length)) * (100 / 3)
+    successBuild = (passedBuilds / pulls.length) * (100 / 3)
+    branchesVsMerges = ((branchArray.length - 1) / pulls.length) * (100 / 3)
     total = codeReviewed + successBuild + branchesVsMerges
   } else if (repeatFrequency <= 20.00) {
-    codeReviewed = ((reviews.length) / (summary.length)) * (80 / 3)
-    successBuild = (totalHealthyBuilds / summary.length) * (80 / 3)
-    branchesVsMerges = ((branches.length - 1) / summary.length) * (80 / 3)
+    codeReviewed = ((reviewedPulls.length) / (pulls.length)) * (80 / 3)
+    successBuild = (passedBuilds / pulls.length) * (80 / 3)
+    branchesVsMerges = ((branchArray.length - 1) / pulls.length) * (80 / 3)
     total = codeReviewed + successBuild + branchesVsMerges
   } else if (repeatFrequency <= 40.00) {
-    codeReviewed = ((reviews.length) / (summary.length)) * (60 / 3)
-    successBuild = (totalHealthyBuilds / summary.length) * (60 / 3)
-    branchesVsMerges = ((branches.length - 1) / summary.length) * (60 / 3)
+    codeReviewed = ((reviewedPulls.length) / (pulls.length)) * (60 / 3)
+    successBuild = (passedBuilds / pulls.length) * (60 / 3)
+    branchesVsMerges = ((branchArray.length - 1) / pulls.length) * (60 / 3)
     total = codeReviewed + successBuild + branchesVsMerges
   } else if (repeatFrequency <= 60.00) {
-    codeReviewed = ((reviews.length) / (summary.length)) * (40 / 3)
-    successBuild = (totalHealthyBuilds / summary.length) * (40 / 3)
-    branchesVsMerges = ((branches.length - 1) / summary.length) * (40 / 3)
+    codeReviewed = ((reviewedPulls.length) / (pulls.length)) * (40 / 3)
+    successBuild = (passedBuilds / pulls.length) * (40 / 3)
+    branchesVsMerges = ((branchArray.length - 1) / pulls.length) * (40 / 3)
     total = codeReviewed + successBuild + branchesVsMerges
   } else {
-    codeReviewed = ((reviews.length) / (summary.length)) * (20 / 3)
-    successBuild = (totalHealthyBuilds / summary.length) * (20 / 3)
-    branchesVsMerges = ((branches.length - 1) / summary.length) * (20 / 3)
+    codeReviewed = ((reviewedPulls.length) / (pulls.length)) * (20 / 3)
+    successBuild = (passedBuilds / pulls.length) * (20 / 3)
+    branchesVsMerges = ((branchArray.length - 1) / pulls.length) * (20 / 3)
     total = codeReviewed + successBuild + branchesVsMerges
   }
 
   return (total.toFixed(2))
 }
-
+async function pullRequestInfo (pulls) {
+  let obj = []
+  for (var i = (pulls).length - 1; i >= 0; i--) {
+    // populates the merged pull request object called 'summary'
+    var mergeDate = 0
+    if ((pulls[i].merged_at !== null) && (pulls[i].base.ref === 'master')) {
+      mergeDate = pulls[i].merged_at
+      obj.push({
+        'Pull_Request': pulls[i].number,
+        'User': pulls[i].user.login,
+        'Merge_Date': mergeDate,
+        'Message': pulls[i].body,
+        'Total_Commits': 0,
+        'Branch': pulls[i].head.ref,
+        'additions': '',
+        'normal_Delitions': '',
+        'node_Additions': '',
+        'node_Deletions': '',
+        'all_Additions': ''
+      })
+    }
+  } // closedPulls loop ends here
+  return obj
+}
+async function repeatedBranch () {
+  for (let p = 0; p < branches.length; p++) {
+    var total = 0
+    for (let z = 0; z < summary.length; z++) {
+      if (((summary[z]).Branch === (branches[p]).name)) {
+        total++
+      } else {
+      }
+    }
+    if (total > 1) {
+      repeatBranch.push({
+        'name': (branches[p]).name,
+        'repeated': total
+      })
+    }
+  }
+  return repeatBranch
+}
 function overviewPie () {
   var data = contributorMergedPullReq
   var div = '#overviewPie'

@@ -13,7 +13,7 @@ $(document).ready(function () {
     d3.selectAll('svg').remove()
     plotTimeline()
     if (grouptValidation) {
-      stackedBarDirtyData(dirtyData, getNames())
+      stackedBarDirtyData(dirtyData, getNames(summary))
     }
     var cardInfor = document.getElementById('3cards_template').innerHTML
     template = Handlebars.compile(cardInfor)
@@ -43,7 +43,7 @@ $(document).ready(function () {
     d3.selectAll('svg').remove()
     plotTimeline()
     if (grouptValidation) {
-      stackedBarDirtyData(dirtyData, getNames())
+      stackedBarDirtyData(dirtyData, getNames(summary))
     }
     dynamicBarData()
     togglePopup()
@@ -75,16 +75,7 @@ async function getReleases () {
     getReleaseDates()
   } catch (err) { console.log(err) }
 }
-/*
-// draws the timeline
-const dateOfRelease = () => {
-  getReleases().then((res) => {
-
-  //  cleanBranchInfo()
-  })
-}
-*/
-
+// Plotsthe timeline
 function plotTimeline () {
   var day = 1000 * 60 * 60 * 24 // this gives a day in milliseconds
   var testData = cleanData()
@@ -122,7 +113,7 @@ function plotTimeline () {
           togglePopup()
         }
         popTrack++
-        var devNames = getNames()
+        var devNames = getNames(summary)
         var sprintBarInfo = sprintBarData(devNames, contributionsPerSprint, i)
 
         if ((sprintBarInfo.length !== 0)) {
@@ -195,7 +186,8 @@ function noOfDays (date1, date2) {
 // modifies data to be in a supported formate for timeline plot
 function cleanData () {
   var releaseTime = []
-  getexpReleaseDates()
+  var relInfo = JSON.parse(JSON.stringify(releaseInfo))
+  releaseInfo = JSON.parse(JSON.stringify(getexpReleaseDates(relInfo)))
 
   const currentData = releaseInfo
   const actualDates = currentData.actualreleaseDates
@@ -219,20 +211,20 @@ function cleanData () {
 }
 
 // gives the expected release Dates
-function getexpReleaseDates () {
+function getexpReleaseDates (currentReleaseInfo) {
   const day = 1000 * 60 * 60 * 24
-  var daysElapsed = releaseInfo.daysElapsed
+  var daysElapsed = currentReleaseInfo.daysElapsed
 
-  var noOfReleases = releaseInfo.actualreleaseDates.length
-
-  releaseInfo.expreleaseDates[0] = releaseInfo.actualreleaseDates[0]
+  var noOfReleases = currentReleaseInfo.actualreleaseDates.length
+  currentReleaseInfo.expreleaseDates[0] = currentReleaseInfo.actualreleaseDates[0]
   for (var i = 1; i < noOfReleases; i++) {
     var nextRelease = daysElapsed
-    releaseInfo.expreleaseDates[i] = releaseInfo.expreleaseDates[i - 1] + nextRelease
+    currentReleaseInfo.expreleaseDates[i] = currentReleaseInfo.expreleaseDates[i - 1] + nextRelease
   }
-  SprintLength = (releaseInfo.daysElapsed) / day
+  SprintLength = (currentReleaseInfo.daysElapsed) / day
+  return currentReleaseInfo
 }
-// sends details to the html file
+// Sorts the data for the table on release dates information
 function releaseDetais (i) {
   const day = 1000 * 60 * 60 * 24
   var releaser = (releaseInfo.releaser)[i]
@@ -646,7 +638,7 @@ function stackedBarDirtyData (data, names) {
     .style('text-decoration', 'bold')
     .text('Unfiltered No. of Lines of Code Added vs Release Dates')
 
-  plotBar(contributionsPerSprint, getNames(), 'cleanBar')
+  plotBar(contributionsPerSprint, getNames(summary), 'cleanBar')
 }
 
 // ploting for the overview page
@@ -795,51 +787,39 @@ function colorFunction () {
   var colorArray = ['#e6beff', '#aa6e28', '#808080', '#008080', '#aa6e28', '#46f0f0', '#dd4477', '#66aa00', '#b82e2e', '#316395', '#994499', '#22aa99', '#aaaa11', '#6633cc', '#e67300', '#8b0707', '#651067', '#329262', '#5574a6', '#3b3eac']
   return colorArray
 };
-/*
-const getlinesPerPull = async () => {
-  var pullInfo = []
-  for (var i = 0; i < summary.length; i++) {
-    const pullNo = (summary[i]).Pull_Request
-    const result = await fetch(`https://api.github.com/repos/${userInfo.organisation}/${userInfo.repository}/pulls/${pullNo}/files?state=closed&access_token=${userInfo.accessToken}`)
-    const data = await result.json()
-    pullInfo.push(data)
-  }
-  return {pullInfo}
-}
-*/
-function pullDetails () {
-  for (var i = 0; i < pullInfo.length; i++) {
+
+function pullDetails (currentPullInfo, currentSummary) {
+  for (var i = 0; i < currentPullInfo.length; i++) {
     var additions = 0
     var deletions = 0
     var nodeAdds = 0
     var unfilteredAdds = 0
     var nodeDeletion = 0
-    for (var j = 0; j < pullInfo[i].length; j++) {
-      var filename = ((pullInfo[i])[j]).filename
+    for (var j = 0; j < currentPullInfo[i].length; j++) {
+      var filename = ((currentPullInfo[i])[j]).filename
       filename = filename.substring(0, 12)
-      unfilteredAdds += ((pullInfo[i])[j]).additions
+      unfilteredAdds += ((currentPullInfo[i])[j]).additions
       if (filename !== 'node_modules') {
-        additions += ((pullInfo[i])[j]).additions
-        deletions += ((pullInfo[i])[j]).deletions
+        additions += ((currentPullInfo[i])[j]).additions
+        deletions += ((currentPullInfo[i])[j]).deletions
       } else {
-        nodeAdds += ((pullInfo[i])[j]).additions
-        nodeDeletion += ((pullInfo[i])[j]).deletions
+        nodeAdds += ((currentPullInfo[i])[j]).additions
+        nodeDeletion += ((currentPullInfo[i])[j]).deletions
       }
     };
-    (summary[i]).additions = additions;
-    (summary[i]).normal_Delitions = deletions;
-    (summary[i]).node_Additions = nodeAdds;
-    (summary[i]).node_Deletions = nodeDeletion;
-    (summary[i]).all_Additions = unfilteredAdds
+    (currentSummary[i]).additions = additions;
+    (currentSummary[i]).normal_Delitions = deletions;
+    (currentSummary[i]).node_Additions = nodeAdds;
+    (currentSummary[i]).node_Deletions = nodeDeletion;
+    (currentSummary[i]).all_Additions = unfilteredAdds
   }
-  stackeBarData()
+  return currentSummary
 }
 
 function stackeBarData () {
-//  console.log('stacked bar data start')
-  releaseDates = releaseInfo.actualreleaseDates
+ releaseDates = releaseInfo.actualreleaseDates
   var data = []
-  const names = getNames()
+  const names = getNames(summary)
   if (summary.length < releaseDates.length) {
     grouptValidation = false
   } else {
@@ -853,16 +833,16 @@ function stackeBarData () {
       data[i] = obj
       dirtyData[i] = obj2
     }
-    // console.log(data[i])
+
 
     for (var i = 0; i < summary.length; i++) {
       var index = ((summary[i]).release_id - 1);
 
       (data[index])[(summary[i]).User] += (summary[i]).additions;
       (dirtyData[index])[(summary[i]).User] += (summary[i]).all_Additions
-      // console.log(data[index])
+ 
       var yr = releaseDates[((summary[i]).release_id)];
-      // console.log(yr);
+
       (data[((summary[i]).release_id - 1)])['year'] = convertTimestamp(yr);
       (dirtyData[((summary[i]).release_id - 1)])['year'] = convertTimestamp(yr)
     }
@@ -872,10 +852,10 @@ function stackeBarData () {
   }
 }
 
-function getNames () {
+function getNames (currentSummary) {
   var names = []
-  for (var i = 0; i < summary.length; i++) {
-    names[i] = (summary[i]).User
+  for (var i = 0; i < currentSummary.length; i++) {
+    names[i] = (currentSummary[i]).User
   }
   names.removeDuplicates()
   return names
@@ -1087,12 +1067,8 @@ function getBranchLife () {
         if (((branches[i]).commitData.length) !== 0) {
           lastElement = ((branches[i]).commitData.length) - 1
         }
-        console.log(lastElement)
-        console.log(((branches[i].commitData[lastElement]).created_at))
         var commitDate = (new Date(((branches[i].commitData[lastElement]).created_at).substring(0, 10))).getTime()
         var isShortLived = checkBranchLife(((summary[j]).release_id), commitDate)
-        console.log(isShortLived)
-        console.log(branches[i].commitData)
         break
       }
     }
@@ -1123,7 +1099,7 @@ const cleanBranchInfo = () => {
     for (var i = 0; i < branches.length; i++) {
       branchNames.push((branches[i]).name)
     }
-    console.log(branchNames)
+
   })
 }
 */
