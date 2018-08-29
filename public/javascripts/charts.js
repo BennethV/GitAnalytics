@@ -247,7 +247,7 @@ $(document).ready(function () {
     var overViewInfo = document.getElementById('overviewLayout-template').innerHTML
     var template = Handlebars.compile(overViewInfo)
     var sprintNumber = releaseInfo.actualreleaseDates.length - 1
-    var names = getNames()
+    var names = getNames(summary)
     var overviewData = template({
       title: 'Welcome to ' + userInfo.repository + ' Repository Statistics',
       NumberOfSprint: sprintNumber,
@@ -264,7 +264,7 @@ $(document).ready(function () {
     d3.selectAll('svg').remove()
     overviewPie()
     if (grouptValidation) {
-      stackedBarOverview(contributionsPerSprint, getNames())
+      stackedBarOverview(contributionsPerSprint, getNames(summary))
     } else {
       alert('This group has missing information.\n' +
         'POSSIBLE REASONS:\n' +
@@ -330,7 +330,7 @@ $(document).ready(function () {
       card1: 'Total Sprints',
       text1: (releases.length),
       card2: 'Number of Contributors',
-      text2: ((getNames()).length),
+      text2: ((getNames(summary)).length),
       card3: 'Total Pull Requests Reviewed',
       text3: (pullReview.length + '/' + summary.length)
     })
@@ -430,7 +430,7 @@ $(document).ready(function () {
       card1: 'Total Releases',
       text1: (releases.length),
       card2: 'Number of Contributors',
-      text2: ((getNames()).length),
+      text2: ((getNames(summary)).length),
       card3: 'Average Pull Request Per Dev',
       text3: (summary.length / contributors.length)
 

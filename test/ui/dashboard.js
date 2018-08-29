@@ -1,5 +1,17 @@
+var fs = require('fs')
+var reset = {
+  'accessToken': '',
+  'username': '',
+  'organisation': '',
+  'repository': ''
+}
+fs.writeFile(__dirname + '\\..\\..\\public\\javascripts\\data.json', JSON.stringify(reset), function (err) {
+  if (err) throw err
+  console.log(err)
+})
 module.exports = {
   'Accessing the dashboard': function (client) {
+
     client
       .url('http://127.0.0.1:3000/charts')
       .waitForElementVisible('.Orow3', 180000)
@@ -45,5 +57,6 @@ module.exports = {
       .setValue('input[type=text]', 'Client can input data')
       .pause(2000)
       .assert.containsText('body', 'Authorisation')
+      .end()
   }
 }
