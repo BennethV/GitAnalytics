@@ -5,28 +5,28 @@
 
   <testsuite name="dashboard"
     errors="0" failures="0" hostname="" id="" package="dashboard" skipped="0"
-    tests="2" time="45.03" timestamp="Mon, 27 Aug 2018 08:20:11 GMT">
+    tests="2" time="110.8" timestamp="Mon, 03 Sep 2018 09:01:03 GMT">
   
-    <testcase name="Authorisation Page" classname="dashboard" time="7.818" assertions="2">
+    <testcase name="Accessing the dashboard" classname="dashboard" time="102.4" assertions="8">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
 
     
 
     
     </testcase>
   
-    <testcase name="Accessing the dashboard" classname="dashboard" time="37.22" assertions="8">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
+    <testcase name="Authorisation Page" classname="dashboard" time="8.406" assertions="2">
 
     
 

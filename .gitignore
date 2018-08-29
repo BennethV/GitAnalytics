@@ -61,3 +61,5 @@ typings/
 .next
 
 public/javascripts/data.json
+
+test/

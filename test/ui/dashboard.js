@@ -1,12 +1,4 @@
 module.exports = {
-  'Authorisation Page': function (client) {
-    client
-      .url('http://127.0.0.1:3000')
-      .waitForElementVisible('body', 1000)
-      .setValue('input[type=text]', 'Client can input data')
-      .pause(2000)
-      .assert.containsText('body', 'Authorisation')   
-  },
   'Accessing the dashboard': function (client) {
     client
       .url('http://127.0.0.1:3000/charts')
@@ -45,5 +37,13 @@ module.exports = {
       .click('#logout')
       .pause(2000)
       .end()
+  },
+  'Authorisation Page': function (client) {
+    client
+      .url('http://127.0.0.1:3000')
+      .waitForElementVisible('body', 1000)
+      .setValue('input[type=text]', 'Client can input data')
+      .pause(2000)
+      .assert.containsText('body', 'Authorisation')
   }
 }
