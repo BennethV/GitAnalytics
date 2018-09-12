@@ -10,7 +10,7 @@
  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   </link>
 
-   <!-- <link href='https://cdn.rawgit.com/mochajs/mocha/2.2.5/mocha.css' rel='stylesheet' /> -->
+   <link href='https://cdn.rawgit.com/mochajs/mocha/2.2.5/mocha.css' rel='stylesheet' />
 
   <!-- You can download Handlebars at http:// handlebarsjs.com/ and save it as handlebars-v4.0.2.js on your site. Then make it available by adding the following line. -->
   <style type="text/css">
@@ -60,11 +60,11 @@ td, th {
     <h1 class="center">Please wait while we fetch your repository information.</h1>
       <img src ="/cdn/gifs/RubixCube-8.gif" class="center">
   </div>
-
-  <div class="main">
+  <!-- <div id='mocha'></div> -->
+  <div class="main" id = "mainmain">
       <!-- It is better to separate your template from the JS and you do that by placing the template in its own tag -->
     
-<!-- <div id='mocha'></div> -->
+
 <!--  code from James-->
 
 <div id="frontOverview"></div>
@@ -319,9 +319,21 @@ function filterFunction() {
 </script>
 
 
-<script type="text/javascript" src="/cdn/javascripts/unitTests.js"></script>
+<script type="text/javascript" src="/cdn/javascripts/test/unitTests.js"></script>
+<script type="text/javascript" src="/cdn/javascripts/test/pullRequest.js"></script>
 <script>
-    // mocha.run();
+  function test(){
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('body').style.backgroundColor = 'white'
+    //document.body.innerHTML = ''
+    document.getElementById('mainmain').style.display = ''
+    var div = document.getElementById('mainmain');
+div.innerHTML =
+    '<div id = "mocha"></div>';
+    console.log(mocha.run())
+    console.log('Reload page to run the tests again!')
+  }
+     
 </script>
 
 </body>
